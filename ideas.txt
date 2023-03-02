@@ -1,1 +1,14 @@
-Test
+1) Data-level methods
+- see Advanced ML
+
+2) Algorithmic methods
+
+
+3) Hybrid methods
+
+
+
+
+4) Optimization
+- Use Bayesian optimization
+
