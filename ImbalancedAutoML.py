@@ -6,6 +6,7 @@ class ImbalancedAutoML(ClassifierMixin):
         super().__init__()
 
     def fit(self, X=None, y=None):
+        
         raise (NotImplementedError)
 
     def predict(self, X=None):

@@ -19,6 +19,6 @@ df.loc[:,"Label"].value_counts()
 
 # %%
 
-df.groupby(by="Label").var()
+df.groupby(by="Label").mean()
 
 # %%
