@@ -1,5 +1,7 @@
 1) Data-level methods
-- see Advanced ML
+- see Advanced ML (goes beyond lecture)
+- Undersampling: Tomek links, Condensed nearest neighbours
+- Oversampling: SMOTE
 
 2) Algorithmic methods
 
