@@ -9,6 +9,8 @@ from sklearn import impute, pipeline, tree
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import balanced_accuracy_score
 
+from ImbalancedAutoML import ImbalancedAutoML
+
 # %%
 
 data = Dataset.from_openml(976)
@@ -20,20 +22,31 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
 
 # %%
 
-from ImbalancedAutoML import ImbalancedAutoML
-
 automl = ImbalancedAutoML()
 
 score_vector = []
 
-for _ in range(1):
-    automl.fit(X_train, y_train)
+automl.fit(X_train, y_train)
 
-    y_eval = automl.predict(X_test)
+y_eval = automl.predict(X_test)
 
-    score_vector.append(balanced_accuracy_score(y_test, y_eval))
+print("Test accuracy: {:.3f}".format(balanced_accuracy_score(y_test, y_eval)))
 
-print(np.array(score_vector).mean())
+dehb = automl.get_dehb()
+
+# %%
+
+print("Incumbent configuration with train accuracy of {:.3f}:".format(-dehb.get_incumbents()[1]))
+print(dehb.vector_to_configspace(dehb.inc_config).get_dictionary())
+
+# %%
+
+history = automl.get_history()
+
+last_eval = history[-1]
+config, score, cost, budget, _info = last_eval
+
+dehb.vector_to_configspace(config)
 
 # %%
 

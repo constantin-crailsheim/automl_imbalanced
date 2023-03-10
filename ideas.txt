@@ -13,4 +13,10 @@
 
 4) Optimization
 - Use Bayesian optimization
+- Use DEHB
+
+
+Ideas:
+
+- Rerun optimization multiple times and pick best incumbent
 
