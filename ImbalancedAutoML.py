@@ -2,25 +2,27 @@
 import time
 from typing import Union, List, Dict
 
-from sklearn.base import ClassifierMixin
-from sklearn.model_selection import KFold, cross_val_score
-from sklearn import impute, pipeline, tree, ensemble
-from sklearn.metrics import balanced_accuracy_score
-
 import numpy as np
 
+from sklearn.base import ClassifierMixin
+from sklearn.ensemble._base import BaseEnsemble
+from sklearn.model_selection import KFold, cross_val_score
+from sklearn import impute, pipeline, tree, ensemble
 
 from imblearn import under_sampling, over_sampling
 
 from dehb import DEHB
 from ConfigSpace import Configuration, ConfigurationSpace, Categorical, Float, Integer
 
-
 from configuration import scoring
 
 
-class ImbalancedAutoML(ClassifierMixin):
-    def __init__(self) -> None:
+class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
+    def __init__(self,
+                 min_budget: Float = 2, 
+                 max_budget: Float = 50, 
+                 total_cost: Float = 3600
+                 ) -> None:
         super().__init__()
 
         self.sampling_strategies = {
@@ -28,19 +30,31 @@ class ImbalancedAutoML(ClassifierMixin):
                 "Tomek links": under_sampling.TomekLinks()
             }
 
-        self.cv = KFold(n_splits=2, shuffle=True, random_state=42)
+        self.cv = KFold(n_splits=3, shuffle=True, random_state=42)
 
-        self.min_budget = 2
+        self.min_budget = min_budget
+        self.max_budget = max_budget
+        self.total_cost = total_cost
 
-        self.max_budget = 50
-
+        self.dehb_objects = []
+        self.trajectories = []
+        self.runtimes = []
+        self.histories = []
 
     def create_search_space(self, seed=42):
 
         cs = ConfigurationSpace(seed)
 
         sampling_strategy = Categorical(
-            "sampling_strategy", items=["SMOTE", "Tomek links"]
+            "sampling_strategy", items=["SMOTE", "Tomek links", "None"]
+        )
+
+        n_estimators = Integer(
+            'n_estimators', (50, 500), default=100, log=False, q = 50
+        )
+
+        criterion = Categorical(
+            "criterion", items=["gini", "entropy", "log_loss"]
         )
 
         max_depth = Integer(
@@ -52,11 +66,15 @@ class ImbalancedAutoML(ClassifierMixin):
         max_features = Float(
             'max_features', (0.1, 0.9), default=0.5, log=False
         )
-        min_samples_lead = Integer(
+        min_samples_leaf = Integer(
             'min_samples_leaf', (1, 64), default=5, log=True
         )
 
-        cs.add_hyperparameters([sampling_strategy, max_depth, min_samples_split, max_features, min_samples_lead])
+        class_weight = Categorical(
+            "class_weight", items=["balanced", "balanced_subsample", "None"]
+        )
+
+        cs.add_hyperparameters([sampling_strategy, n_estimators, criterion, max_depth, min_samples_split, max_features, min_samples_leaf, class_weight])
 
         return cs
     
@@ -81,9 +99,12 @@ class ImbalancedAutoML(ClassifierMixin):
             train_y = kwargs["train_y"]
             
             start = time.time()
-            train_X, train_y = self.sampling_strategies[config["sampling_strategy"]].fit_resample(train_X, train_y)
+            if config["sampling_strategy"] != "None":
+                train_X, train_y = self.sampling_strategies[config["sampling_strategy"]].fit_resample(train_X, train_y)
             config_dict = config.get_dictionary()
             config_dict.pop("sampling_strategy")
+            if config_dict["class_weight"] == "None":
+                config_dict["class_weight"] = None
             model = pipeline.Pipeline(
                 steps=[
                     ("imputer", impute.SimpleImputer()),
@@ -104,37 +125,62 @@ class ImbalancedAutoML(ClassifierMixin):
             
             return result
 
-    def fit(self, X=None, y=None, verbose=False, output_path="results", seed=42):
+    def fit(self, 
+            X=None, 
+            y=None,
+            verbose: bool = False,
+            save_intermediate: bool = True,
+            number_restarts: int = 1,
+            output_path: str = "results",
+            output_name: Union[str, None] = None,
+            seed: int = 42
+            ):
 
-        cs = self.create_search_space(seed)
+        best_inc_score = 0
 
-        dimensions = len(cs.get_hyperparameters())
+        for restart_number in range(1,number_restarts+1):
+            current_seed = seed*restart_number
+            cs = self.create_search_space(current_seed)
 
-        self.dehb = DEHB(
-            f=self.target_function, 
-            cs=cs, 
-            dimensions=dimensions, 
-            min_budget=self.min_budget, 
-            max_budget=self.max_budget,
-            n_workers=1,
-            output_path=output_path
-        )
+            dimensions = len(cs.get_hyperparameters())
 
-        self.trajectory, self.runtime, self.history = self.dehb.run(
-            total_cost=300,
-            verbose=True,
-            save_intermediate=True,
-            # parameters expected as **kwargs in target_function is passed here
-            seed=42,
-            train_X=X,
-            train_y=y,
-            max_budget=self.dehb.max_budget
-        )
+            dehb = DEHB(
+                f=self.target_function, 
+                cs=cs, 
+                dimensions=dimensions, 
+                min_budget=self.min_budget, 
+                max_budget=self.max_budget,
+                n_workers=1,
+                output_path=output_path
+            )
 
-        best_config = self.dehb.vector_to_configspace(self.dehb.inc_config).get_dictionary()
+            trajectory, runtime, history = dehb.run(
+                total_cost=self.total_cost/number_restarts,
+                verbose=verbose,
+                save_intermediate=save_intermediate,
+                # parameters expected as **kwargs in target_function is passed here
+                seed=current_seed,
+                train_X=X,
+                train_y=y,
+                max_budget=dehb.max_budget,
+                name=output_name + "_restart_" + str(restart_number) if output_name else output_name
+            )
 
-        X, y = self.sampling_strategies[best_config["sampling_strategy"]].fit_resample(X, y)
+            self.dehb_objects.append(dehb)
+            self.trajectories.append(trajectory)
+            self.runtimes.append(runtime)
+            self.histories.append(history)
+
+            if  dehb.inc_score < best_inc_score:
+                best_config = dehb.vector_to_configspace(dehb.inc_config).get_dictionary()
+                best_inc_score = dehb.inc_score
+        
+        # Fit model on best configuration
+        if ["sampling_strategy"] != "None":
+            X, y = self.sampling_strategies[best_config["sampling_strategy"]].fit_resample(X, y)
         best_config.pop("sampling_strategy")
+        if best_config["class_weight"] == "None":
+            best_config["class_weight"] = None
         self.model = pipeline.Pipeline(
             steps=[
                 ("imputer", impute.SimpleImputer()),
@@ -149,15 +195,15 @@ class ImbalancedAutoML(ClassifierMixin):
         return self.model.predict(X)
     
     def get_dehb(self):
-        return self.dehb
+        return self.dehb_objects
     
-    def get_trajectory(self):
-        return self.trajectory
+    def get_trajectories(self):
+        return self.trajectories
     
-    def get_runtime(self):
-        return self.runtime
+    def get_runtimes(self):
+        return self.runtimes
     
-    def get_history(self):
-        return self.history
+    def get_histories(self):
+        return self.histories
     
 

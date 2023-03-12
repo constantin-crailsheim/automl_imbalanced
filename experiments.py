@@ -4,16 +4,17 @@ import numpy as np
 import pandas as pd
 
 from data import Dataset
-from configuration import data_ids
+from configuration import data_ids, scoring
 from sklearn import impute, pipeline, tree
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, KFold, cross_val_score
 from sklearn.metrics import balanced_accuracy_score
 
 from ImbalancedAutoML import ImbalancedAutoML
 
 # %%
 
-data = Dataset.from_openml(976)
+dataset_number = 976
+data = Dataset.from_openml(dataset_number)
 
 X = data.features.to_numpy()
 y = data.labels.to_numpy()
@@ -22,11 +23,11 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
 
 # %%
 
-automl = ImbalancedAutoML()
+automl = ImbalancedAutoML(total_cost=15)
 
 score_vector = []
 
-automl.fit(X_train, y_train)
+automl.fit(X_train, y_train, number_restarts=3, verbose=False, output_name=str(dataset_number))
 
 y_eval = automl.predict(X_test)
 
@@ -36,29 +37,29 @@ dehb = automl.get_dehb()
 
 # %%
 
-print("Incumbent configuration with train accuracy of {:.3f}:".format(-dehb.get_incumbents()[1]))
-print(dehb.vector_to_configspace(dehb.inc_config).get_dictionary())
+for i in range(3):
+    print("Incumbent configuration with train accuracy of {:.3f}:".format(-dehb[i].get_incumbents()[1]))
+    print(dehb[i].vector_to_configspace(dehb[i].inc_config).get_dictionary())
 
 # %%
 
-history = automl.get_history()
+restart_number = 2
 
-last_eval = history[-1]
+histories = automl.get_histories()
+
+last_eval = histories[restart_number][-1]
 config, score, cost, budget, _info = last_eval
 
-dehb.vector_to_configspace(config)
+dehb[restart_number].vector_to_configspace(config)
 
 # %%
 
-for data_id in data_ids:
-    data = Dataset.from_openml(data_id)
+automl = ImbalancedAutoML(total_cost=15)
 
-    X = data.features.to_numpy()
-    y = data.labels.to_numpy()
+cv = KFold(n_splits=2, shuffle=True, random_state=42)
 
-    df = pd.concat([pd.DataFrame(y, columns=["Label"]), pd.DataFrame(X)], axis=1)
-
-    print(df.loc[:,"Label"].value_counts()/len(df))
+scores_dummy = cross_val_score(automl, X, y, scoring=scoring, cv=cv)
+print(f"Balanced Accuracy of featurless baseline: {np.mean(scores_dummy)}")
     
 
 # %%
@@ -97,4 +98,5 @@ y_eval = classtree.predict(X_test)
 
 print(balanced_accuracy_score(y_test, y_eval))
 
+# %%
 # %%

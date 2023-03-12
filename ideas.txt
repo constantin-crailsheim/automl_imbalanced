@@ -4,12 +4,10 @@
 - Oversampling: SMOTE
 
 2) Algorithmic methods
-
+- Balanced loss
 
 3) Hybrid methods
-
-
-
+- Possibly combine both methods
 
 4) Optimization
 - Use Bayesian optimization
@@ -17,6 +15,13 @@
 
 
 Ideas:
+- Check imputation.
+- Add imbalanced data methods.
+- Read about DEHB.
 
-- Rerun optimization multiple times and pick best incumbent
+ToDo:
+- Save CV correctly
+- Write docstrings.
+- Check whether cross validation works out.
+- Improve code quality to be more robust.
 
