@@ -16,6 +16,7 @@
 
 Ideas:
 - Check imputation.
+- use ensemble of restarts
 - Add imbalanced data methods.
 - Read about DEHB.
 
