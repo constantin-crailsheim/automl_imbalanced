@@ -9,7 +9,7 @@ from sklearn import impute, pipeline, tree
 from sklearn.model_selection import train_test_split, KFold, cross_val_score
 from sklearn.metrics import balanced_accuracy_score
 
-from ImbalancedAutoML import ImbalancedAutoML
+from ImbalancedAutoML2 import ImbalancedAutoML
 
 # %%
 
@@ -23,19 +23,29 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
 
 # %%
 
-automl = ImbalancedAutoML(total_cost=15)
+automl = ImbalancedAutoML(total_cost=5)
 
 score_vector = []
 
-automl.fit(X_train, y_train, number_restarts=3, verbose=False, output_name=str(dataset_number))
+automl.fit(X_train, y_train, number_restarts=1, verbose=False, output_name=str(dataset_number))
 
-y_eval = automl.predict(X_test)
+y_eval = automl.predict(X_test, type="best")
 
 print("Test accuracy: {:.3f}".format(balanced_accuracy_score(y_test, y_eval)))
 
-dehb = automl.get_dehb()
+y_eval = automl.predict(X_test, type="ensemble")
+
+print("Test accuracy: {:.3f}".format(balanced_accuracy_score(y_test, y_eval)))
 
 # %%
+
+y_eval = automl.predict(X_test, type=3)
+
+print("Test accuracy: {:.3f}".format(balanced_accuracy_score(y_test, y_eval)))
+
+# %%
+
+dehb = automl.get_dehb()
 
 for i in range(3):
     print("Incumbent configuration with train accuracy of {:.3f}:".format(-dehb[i].get_incumbents()[1]))
@@ -99,4 +109,7 @@ y_eval = classtree.predict(X_test)
 print(balanced_accuracy_score(y_test, y_eval))
 
 # %%
+# %%
+
+list(range(3))
 # %%

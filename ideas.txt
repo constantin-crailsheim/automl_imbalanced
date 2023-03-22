@@ -11,18 +11,36 @@
 
 4) Optimization
 - Use Bayesian optimization
-- Use DEHB
+- Use DEHB, but multiple fidelities?
+- Maybe use SMAC or choose model where longer runtimes improve model.
 
 
 Ideas:
-- Check imputation.
-- use ensemble of restarts
+- Check imputation, e.g. mean, median, mode, sample from edf, random forest imputer.
+- Replace categorical features by new level.
+- Consider feature engineering, e.g. skewed distributions, normalization, standardization, etc.; Use scaling in sklearn, see pg. 146.
+- Check for duplicated columns or constant columns.
 - Add imbalanced data methods.
-- Read about DEHB.
+- Different models: SVM, Gradient Boosting, Penalized regression
+- Read about DEHB: Do I need restarts, since HB already initializes multiple defaults?
+- Check whether multiple fidelities make sense with RF? Mabye we should use other algorithm.
+- Check for paralellization of algorithm.
+- Check for hierarchical search spaces.
+- Consider implementing different models.
+- Consider using model averaging or model stacking (i.e. use multiple (e.g. 3) models and learn RF for weights).
+- Check out Auto-WEKA if we want to use algorithm selection. Issue: Written in Java.
 
 ToDo:
 - Save CV correctly
 - Write docstrings.
 - Check whether cross validation works out.
 - Improve code quality to be more robust.
+
+Visualisation
+- Plot top accuracy over number of iterations.
+- Plot sampling process of hyperparameter, either by picking two hyperparameter or by downscaling with MDS.
+- Parallel coordinate plot.
+
+Comments
+- Outer resampling should be more precise since actual generalization performance, inner resampling can be less precise.
 
