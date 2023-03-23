@@ -8,7 +8,7 @@ import numpy as np
 from sklearn.base import ClassifierMixin
 from sklearn.ensemble._base import BaseEnsemble
 from sklearn.model_selection import KFold, cross_val_score
-from sklearn import impute, pipeline, ensemble, svm
+from sklearn import impute, pipeline, tree, ensemble
 
 from imblearn import under_sampling, over_sampling
 
@@ -43,9 +43,7 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
         self.histories = []
         self.model = []
 
-    def create_search_space(self, model_name, seed=42):
-        
-        assert model_name in ["rf", "gb", "svm"]
+    def create_search_space(self, seed=42):
 
         cs = ConfigurationSpace(seed)
 
@@ -53,42 +51,32 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
             "sampling_strategy", items=["SMOTE", "Tomek links", "None"]
         )
 
-        if model_name == "rf":
-            n_estimators = Integer(
-                'n_estimators', (50, 500), default=100, log=False, q = 50
-            )
+        n_estimators = Integer(
+            'n_estimators', (50, 500), default=100, log=False, q = 50
+        )
 
-            criterion = Categorical(
-                "criterion", items=["gini", "entropy", "log_loss"]
-            )
+        criterion = Categorical(
+            "criterion", items=["gini", "entropy", "log_loss"]
+        )
 
-            max_depth = Integer(
-                'max_depth', (1, 15), default=2, log=False
-            )
-            min_samples_split = Integer(
-                'min_samples_split', (2, 128), default=10, log=True
-            )
-            max_features = Float(
-                'max_features', (0.1, 0.9), default=0.5, log=False
-            )
-            min_samples_leaf = Integer(
-                'min_samples_leaf', (1, 64), default=5, log=True
-            )
+        max_depth = Integer(
+            'max_depth', (1, 15), default=2, log=False
+        )
+        min_samples_split = Integer(
+            'min_samples_split', (2, 128), default=10, log=True
+        )
+        max_features = Float(
+            'max_features', (0.1, 0.9), default=0.5, log=False
+        )
+        min_samples_leaf = Integer(
+            'min_samples_leaf', (1, 64), default=5, log=True
+        )
 
-            class_weight = Categorical(
-                "class_weight", items=["balanced", "balanced_subsample", "None"]
-            )
-        
-            cs.add_hyperparameters([sampling_strategy, n_estimators, criterion, max_depth, min_samples_split, max_features, min_samples_leaf, class_weight])
+        class_weight = Categorical(
+            "class_weight", items=["balanced", "balanced_subsample", "None"]
+        )
 
-        elif model_name == "gb":
-            None
-            # https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
-
-
-        elif model_name == "svm":
-            None
-            # https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html
+        cs.add_hyperparameters([sampling_strategy, n_estimators, criterion, max_depth, min_samples_split, max_features, min_samples_leaf, class_weight])
 
         return cs
     
@@ -113,25 +101,19 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
             train_y = kwargs["train_y"]
             
             start = time.time()
-
             if config["sampling_strategy"] != "None":
                 train_X, train_y = self.sampling_strategies[config["sampling_strategy"]].fit_resample(train_X, train_y)
             config_dict = config.get_dictionary()
             config_dict.pop("sampling_strategy")
-
-            if config_dict["model_name"] == "rf":
-                if config_dict["class_weight"] == "None":
-                    config_dict["class_weight"] = None
-
+            if config_dict["class_weight"] == "None":
+                config_dict["class_weight"] = None
             model = pipeline.Pipeline(
                 steps=[
                     ("imputer", impute.SimpleImputer()),
-                    ("estimator", kwargs["model"](**config_dict)),
+                    ("estimator", ensemble.RandomForestClassifier(**config_dict)),
                 ]
             )
-
             score = np.mean(cross_val_score(model, train_X, train_y, scoring=scoring, cv=self.cv))
-
             cost = time.time() - start
             
             result = {
@@ -150,23 +132,20 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
             y=None,
             verbose: bool = False,
             save_intermediate: bool = True,
+            number_restarts: int = 1,
             output_path: str = "results",
             output_name: Union[str, None] = None,
             seed: int = 42
             ):
 
+        self.number_restarts = number_restarts
         self.y_classes = np.unique(y)
 
         best_inc_score = 0
 
-        model_number = 0
-
-        model_dict = {"rf": ensemble.RandomForestClassifier, "gb": ensemble.GradientBoostingClassifier, "svm": svm.SVC}
-        model_cost_dict = {"rf": self.total_cost/3, "gb": self.total_cost/3, "svm": self.total_cost/3}
-
-        for model_name, model in model_dict.items():
-
-            cs = self.create_search_space(seed, model_name)
+        for restart_number in range(1,number_restarts+1):
+            current_seed = seed*restart_number
+            cs = self.create_search_space(current_seed)
 
             dimensions = len(cs.get_hyperparameters())
 
@@ -181,17 +160,15 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
             )
 
             trajectory, runtime, history = dehb.run(
-                total_cost=model_cost_dict[model_name],
+                total_cost=self.total_cost/number_restarts,
                 verbose=verbose,
                 save_intermediate=save_intermediate,
                 # parameters expected as **kwargs in target_function is passed here
-                seed=seed,
+                seed=current_seed,
                 train_X=X,
                 train_y=y,
-                model_name=model_name,
-                model=model,
                 max_budget=dehb.max_budget,
-                name=output_name + "_model_" + str(model_name) + "_" + datetime.now().strftime("%Y_%m_%d-%I_%M_%S_%p") if output_name else output_name
+                name=output_name + "_restart_" + str(restart_number) + "_" + datetime.now().strftime("%Y_%m_%d-%I_%M_%S_%p") if output_name else output_name
             )
 
             self.dehb_objects.append(dehb)
@@ -200,7 +177,7 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
             self.histories.append(history)
 
             if  dehb.inc_score < best_inc_score:
-                self.best_model = model_name
+                self.best_restart_number = restart_number
                 best_inc_score = dehb.inc_score
         
             best_config = dehb.vector_to_configspace(dehb.inc_config).get_dictionary()
@@ -212,13 +189,10 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
             self.model.append(pipeline.Pipeline(
                 steps=[
                     ("imputer", impute.SimpleImputer()),
-                    ("estimator", model(**best_config)),
+                    ("estimator", ensemble.RandomForestClassifier(**best_config)),
                 ]
             ))
-            self.model[model_number].fit(X, y)
-            model_number +=1
-
-            break # Remove
+            self.model[restart_number-1].fit(X, y)
 
         return self
 
