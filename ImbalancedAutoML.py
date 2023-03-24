@@ -237,6 +237,7 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
         
         results_path = output_path + "/dataset_" + output_name + "_time_" + datetime.now().strftime("%Y_%m_%d-%I_%M_%S_%p")
         
+        # This only works for one run
         for i in range(1,4):
             results_path = output_path + "/dataset_" + output_name + "_cv_" + str(i)
             if not os.path.exists(results_path):
