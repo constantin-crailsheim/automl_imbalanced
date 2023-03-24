@@ -34,7 +34,7 @@ ToDo:
 
 
 Visualisation
-- Plot top accuracy over number of iterations.
+- Plot incumbent accuracy over number.
 - Plot sampling process of hyperparameter, either by picking two hyperparameter or by downscaling with MDS.
 - Parallel coordinate plot.
 

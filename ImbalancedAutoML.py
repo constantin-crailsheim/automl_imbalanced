@@ -46,7 +46,7 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
         
         self.random_state = random_state
 
-        self.cv = KFold(n_splits=3, shuffle=True, random_state=random_state)
+        self.cv = KFold(n_splits=4, shuffle=True, random_state=random_state)
 
         self.min_budget = min_budget
         self.max_budget = max_budget
@@ -95,11 +95,11 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
                 'min_samples_leaf', (1, 64), default=5, log=True
             )
 
-            class_weight = Categorical(
-                "class_weight", items=["balanced", "balanced_subsample", "None"]
-            )
+            # class_weight = Categorical(
+            #     "class_weight", items=["balanced", "balanced_subsample", "None"]
+            # )
         
-            cs.add_hyperparameters([sampling_strategy, imputation_strategy, n_estimators, criterion, max_depth, min_samples_split, max_features, min_samples_leaf, class_weight])
+            cs.add_hyperparameters([sampling_strategy, imputation_strategy, n_estimators, criterion, max_depth, min_samples_split, max_features, min_samples_leaf]) # , class_weight
 
         elif model_name == "gb":
             # https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
@@ -150,11 +150,11 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
                 "tol", (1e-4, 1e-2), default=1e-3, log=True
             )
 
-            class_weight = Categorical(
-                "class_weight", items=["balanced", "None"]
-            )
+            # class_weight = Categorical(
+            #     "class_weight", items=["balanced", "None"]
+            # )
 
-            cs.add_hyperparameters([sampling_strategy, imputation_strategy, C, kernel, shrinking, tol, class_weight])
+            cs.add_hyperparameters([sampling_strategy, imputation_strategy, C, kernel, shrinking, tol]) # , class_weight
 
         return cs
     
@@ -187,9 +187,9 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
             imputation_strategy = self.imputation_strategies[config["imputation_strategy"]]
             config_dict.pop("imputation_strategy")
 
-            if kwargs["model_name"] in ["rf", "svm"]:
-                if config_dict["class_weight"] == "None":
-                    config_dict["class_weight"] = None
+            # if kwargs["model_name"] in ["rf", "svm"]:
+            #     if config_dict["class_weight"] == "None":
+            #         config_dict["class_weight"] = None
 
             model = Pipeline(
                 steps=[
@@ -236,8 +236,12 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
         model_cost_dict = {"rf": self.total_cost/3, "gb": self.total_cost/3, "svm": self.total_cost/3}
         
         results_path = output_path + "/dataset_" + output_name + "_time_" + datetime.now().strftime("%Y_%m_%d-%I_%M_%S_%p")
-        if not os.path.exists(results_path):
-            os.makedirs(results_path)
+        
+        for i in range(1,4):
+            results_path = output_path + "/dataset_" + output_name + "_cv_" + str(i)
+            if not os.path.exists(results_path):
+                os.makedirs(results_path)
+                break
 
         for model_name, model in model_dict.items():
 
@@ -288,9 +292,9 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
             imputation_strategy = self.imputation_strategies[best_config["imputation_strategy"]]
             best_config.pop("imputation_strategy")            
 
-            if model_name in ["rf", "svm"]:
-                if best_config["class_weight"] == "None":
-                    best_config["class_weight"] = None
+            # if model_name in ["rf", "svm"]:
+            #     if best_config["class_weight"] == "None":
+            #         best_config["class_weight"] = None
 
             self.model.append(Pipeline(
                 steps=[
