@@ -5,7 +5,7 @@ from sklearn.metrics import balanced_accuracy_score
 
 from ImbalancedAutoML import ImbalancedAutoML
 
-dataset_number = 976
+dataset_number = 1002
 data = Dataset.from_openml(dataset_number)
 
 X = data.features.to_numpy()

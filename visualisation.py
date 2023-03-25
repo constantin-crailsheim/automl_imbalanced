@@ -12,6 +12,8 @@ import json
 
 # Insert dataset id here
 dataset = 976
+total_cost = 3600
+total_cv_folds = 3*4
 
 baseline_performance_dict = {976: 0.960, 1002: 0.537}
 automl_performance_dict = {976: 0.985, 1002: 0.810}
@@ -21,8 +23,9 @@ automl_performance_dict = {976: 0.985, 1002: 0.810}
 
 # Load objects
 
-path_cv1 = "results/dataset_{}_cv1".format(dataset)
-path_cv2 = "results/dataset_{}_cv2".format(dataset)
+path_cv1 = "results/dataset_{}_cv_1".format(dataset)
+path_cv2 = "results/dataset_{}_cv_2".format(dataset)
+path_cv3 = "results/dataset_{}_cv_3".format(dataset)
 
 dehb_objects_cv1 = pickle.load(open(path_cv1 + "/dehb_objects.pkl", 'rb'))
 model_cv1 = pickle.load(open(path_cv1 + "/model.pkl", 'rb'))
@@ -33,6 +36,11 @@ dehb_objects_cv2 = pickle.load(open(path_cv2 + "/dehb_objects.pkl", 'rb'))
 model_cv2 = pickle.load(open(path_cv2 + "/model.pkl", 'rb'))
 runtimes_cv2 = pickle.load(open(path_cv2 + "/runtimes.pkl", 'rb'))
 trajectories_cv2 = pickle.load(open(path_cv2 + "/trajectories.pkl", 'rb'))
+
+dehb_objects_cv3 = pickle.load(open(path_cv3 + "/dehb_objects.pkl", 'rb'))
+model_cv3 = pickle.load(open(path_cv3 + "/model.pkl", 'rb'))
+runtimes_cv3 = pickle.load(open(path_cv3 + "/runtimes.pkl", 'rb'))
+trajectories_cv3 = pickle.load(open(path_cv3 + "/trajectories.pkl", 'rb'))
 
 # Plot performance over time
 
@@ -50,26 +58,33 @@ performance_gb_cv2 = -trajectories_cv2[1]
 time_svm_cv2 = runtimes_cv2[2].cumsum()
 performance_svm_cv2 = -trajectories_cv2[2]
 
+time_rf_cv3 = runtimes_cv3[0].cumsum()
+performance_rf_cv3 = -trajectories_cv3[0]
+time_gb_cv3 = runtimes_cv3[1].cumsum()
+performance_gb_cv3 = -trajectories_cv3[1]
+time_svm_cv3 = runtimes_cv3[2].cumsum()
+performance_svm_cv3 = -trajectories_cv3[2]
+
 plt.plot(time_rf_cv1, performance_rf_cv1, color="cornflowerblue")
 plt.plot(time_rf_cv2, performance_rf_cv2, color="blue")
-# color=navy
+plt.plot(time_rf_cv3, performance_rf_cv3, color="navy")
 
 plt.plot(time_gb_cv1, performance_gb_cv1, color="orange")
 plt.plot(time_gb_cv2, performance_gb_cv2, color="orangered")
-# color=firebrick
+plt.plot(time_gb_cv3, performance_gb_cv3, color="firebrick")
 
 plt.plot(time_svm_cv1, performance_svm_cv1, color="lightgreen")
 plt.plot(time_svm_cv2, performance_svm_cv2, color="green")
-# color=darkgreen
+plt.plot(time_svm_cv3, performance_svm_cv3, color="darkgreen")
 
-plt.hlines(y=baseline_performance_dict[dataset], xmin=0, xmax=600, colors="dimgrey")
+plt.hlines(y=baseline_performance_dict[dataset], xmin=0, xmax=total_cost/total_cv_folds, colors="dimgrey")
 
-plt.plot(600, automl_performance_dict[dataset], marker="o", markersize=5, markeredgecolor="purple", markerfacecolor="purple")
+plt.plot(total_cost/total_cv_folds, automl_performance_dict[dataset], marker="o", markersize=5, markeredgecolor="purple", markerfacecolor="purple")
 
 plt.xlabel("Wallclock time in seconds")
 plt.ylabel("Accuracy")
 plt.title("Trajectories of dataset with id {}".format(dataset))
-plt.legend(["Random forest (CV 1)", "Random forest (CV 2)", "Gradient boosting (CV 1)", "Gradient boosting (CV 2)", "SVM (CV 1)", "SVM (CV 2)", "Untuned RF baseline", "AutoML sytem (ECV)"])
+plt.legend(["Random forest (CV 1)", "Random forest (CV 2)", "Random forest (CV 3)", "Gradient boosting (CV 1)", "Gradient boosting (CV 2)", "Gradient boosting (CV 3)", "SVM (CV 1)", "SVM (CV 2)", "SVM (CV 3)", "Untuned RF baseline", "AutoML sytem (ECV)"])
 
 if not os.path.exists("trajectory_plots"):
     os.makedirs("trajectory_plots")
@@ -83,11 +98,11 @@ inc_hp_gb = pd.DataFrame(columns=["Dataset ID", "CV fold", "criterion", "imputat
 inc_hp_svm = pd.DataFrame(columns=["Dataset ID", "CV fold", "C", "class_weight", "imputation_strategy", "kernel", "sampling_strategy", "shrinking"])
 
 # data_ids
-ids = [976, 1002]
+ids = [976]
 for id in ids:
-    for cv_fold in range(1,3):
+    for cv_fold in range(1,4):
 
-        path = 'results/dataset_{}_cv{}'.format(id,cv_fold)
+        path = 'results/dataset_{}_cv_{}'.format(id,cv_fold)
 
         files_in_dir = np.array(os.listdir(path))
 

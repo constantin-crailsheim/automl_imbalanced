@@ -41,3 +41,7 @@ Visualisation
 Comments
 - Outer resampling should be more precise since actual generalization performance, inner resampling can be less precise.
 
+Problems:
+- Should we combine Tomek links with oversampling, since otherwise too much info lost?
+- Check why n_estimators does not divide by q=50?
+
