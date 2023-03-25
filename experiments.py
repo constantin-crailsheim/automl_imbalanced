@@ -9,17 +9,30 @@ from sklearn import impute, pipeline, tree
 from sklearn.model_selection import train_test_split, KFold, cross_val_score
 from sklearn.metrics import balanced_accuracy_score
 
-from ImbalancedAutoML2 import ImbalancedAutoML
+from ImbalancedAutoML import ImbalancedAutoML
 
 # %%
 
-dataset_number = 976
-data = Dataset.from_openml(dataset_number)
+for id in data_ids:
+    data = Dataset.from_openml(id)
 
-X = data.features.to_numpy()
-y = data.labels.to_numpy()
+    X = data.features.to_numpy()
+    # y = data.labels.to_numpy()
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+    print(X.dtype)
+    # cat_feat1 = 0
+    # cat_feat2 = 0
+
+    # for col in range(X.shape[1]):
+    #     if len(np.unique(X[:,col])) < 30:
+    #         cat_feat1 += 1
+    #     if np.all(np.logical_or(X[:,col] % 1 == 0, np.isnan(X[:,col] % 1))):
+    #         cat_feat2 += 1
+    
+    # print("For dataset {} with {} observations, there are ({}, {}) categorical features out of {} features.".format(id, X.shape[0], cat_feat1, cat_feat2, X.shape[1]))
+
+
+# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
 
 # %%
 
@@ -51,65 +64,93 @@ for i in range(3):
     print("Incumbent configuration with train accuracy of {:.3f}:".format(-dehb[i].get_incumbents()[1]))
     print(dehb[i].vector_to_configspace(dehb[i].inc_config).get_dictionary())
 
-# %%
-
-restart_number = 2
-
-histories = automl.get_histories()
-
-last_eval = histories[restart_number][-1]
-config, score, cost, budget, _info = last_eval
-
-dehb[restart_number].vector_to_configspace(config)
 
 # %%
 
-automl = ImbalancedAutoML(total_cost=15)
+# Checks on imbalanced data:
 
-cv = KFold(n_splits=2, shuffle=True, random_state=42)
+from imblearn import under_sampling, over_sampling, combine
 
-scores_dummy = cross_val_score(automl, X, y, scoring=scoring, cv=cv)
-print(f"Balanced Accuracy of featurless baseline: {np.mean(scores_dummy)}")
-    
+id = 976
 
-# %%
+data = Dataset.from_openml(id)
 
-classtree = pipeline.Pipeline(
-    steps=[
-        ("imputer", impute.SimpleImputer()),
-        ("estimator", tree.DecisionTreeClassifier()),
-    ]
-)
+X = data.features.to_numpy()
+y = data.labels.to_numpy()
 
-score_vector = []
+cat_feat = []
 
-for _ in range(100):
-
-    classtree.fit(X_train, y_train)
-
-    y_eval = classtree.predict(X_test)
-
-    score_vector.append(balanced_accuracy_score(y_test, y_eval))
-
-print(np.array(score_vector).mean())
-
-
-# %%
-
-from imblearn import under_sampling, over_sampling
+for col in range(X.shape[1]):
+    if np.all(np.logical_or(X[:,col] % 1 == 0, np.isnan(X[:,col] % 1))):
+        cat_feat += [col]
 
 sm = over_sampling.SMOTE(random_state=42)
 
-X_res, y_res = sm.fit_resample(X_train, y_train)
+smnc = over_sampling.SMOTENC(random_state=42, categorical_features=cat_feat)
 
-classtree.fit(X_res, y_res)
+smt = combine.SMOTETomek(random_state=42)
 
-y_eval = classtree.predict(X_test)
+X_res, y_res = sm.fit_resample(X, y)
 
-print(balanced_accuracy_score(y_test, y_eval))
+X_res_nc, y_res_nc = smnc.fit_resample(X, y)
+
+X_res_t, y_res_t = smt.fit_resample(X, y)
+
+X_res[:,cat_feat]= np.round(X_res[:,cat_feat])
+
+print(np.mean(y == "N"))
+# print(np.mean(y_res == "N"))
 
 # %%
+
+import numpy as np
+from sklearn.preprocessing import FunctionTransformer
+from sklearn.compose import ColumnTransformer
+
+id = 976
+
+data = Dataset.from_openml(id)
+
+X = data.features.to_numpy()
+y = data.labels.to_numpy()
+
+cat_feat = []
+
+for col in range(X.shape[1]):
+    if np.all(np.logical_or(X[:,col] % 1 == 0, np.isnan(X[:,col] % 1))):
+        cat_feat += [col]
+
+sm = over_sampling.SMOTE(random_state=42)
+
+X_res, y_res = sm.fit_resample(X, y)
+
+ct = ColumnTransformer([("round", FunctionTransformer(np.round), cat_feat),
+                        ("identity", FunctionTransformer(), list(set(range(X.shape[1])) - set(cat_feat)))])
+
+X_res_cat = ct.fit_transform(X_res)
+
+print("a")
+
 # %%
 
-list(range(3))
+import numpy as np
+from ConfigSpace import UniformIntegerHyperparameter, Integer
+
+rs = np.random.RandomState()
+
+u1 = UniformIntegerHyperparameter("u1", 50, 500, default_value=100, log=False, q=50)
+u2 = Integer("u2", (50, 500), default=100, log=False, q=50)
+
+# %%
+
+set([u1.sample(rs) for _ in range(100)])
+
+# %%
+
+set([u2.sample(rs) for _ in range(100)])
+
+
+
+
+
 # %%
