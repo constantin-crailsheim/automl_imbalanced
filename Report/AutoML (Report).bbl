@@ -1,0 +1,11 @@
+\begin{thebibliography}{}
+
+\bibitem[Awad et~al., 2021]{dehb}
+Awad, N., Mallik, N., and Hutter, F. (2021).
+\newblock {DEHB}: Evolutionary hyberband for scalable, robust and efficient
+  hyperparameter optimization.
+\newblock In Zhou, Z., editor, {\em Proceedings of the Thirtieth International
+  Joint Conference on Artificial Intelligence, {IJCAI-21}}, pages 2147--2153.
+  ijcai.org.
+
+\end{thebibliography}

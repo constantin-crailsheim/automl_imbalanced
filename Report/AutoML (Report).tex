@@ -60,6 +60,18 @@
 % ]{biblatex}
 % \addbibresource{...}
 
+% Own packages
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    pdftitle={Overleaf Example},
+    pdfpagemode=FullScreen,
+    }
+
+
 \title{Example Submission Final Project AutoML Lecture WS 2022/2023}
 
 % The syntax for adding an author is
@@ -109,21 +121,112 @@
 \end{abstract}
 
 % content will be automatically hidden during submission
-\begin{acknowledgements}
+% \begin{acknowledgements}
 
-\end{acknowledgements}
+% \end{acknowledgements}
 
-% print bibliography -- for bibtex / natbib, use:
+\section{Introduction}
 
-% \bibliography{...}
 
-% and for biber / biblatex, use:
+The AutoML system optimizes a ML pipeline consisting of four elements. First, a choice of two imputers replaces missing values. Then, either over- or undersampling was applied to deal with imbalance in the targets. After normalizing all features, three different models were fitted, i.e. a random forest classifier, a gradient boosting classifier and a SVM classifier. The choice of pre-processing and the hyperparameters of the model were optimized by DEHB. Finally, the best pipelines for each model were stacked and the final AutoML system predicts the target using majority voting.
 
-% \printbibliography
+\section{Method}
+
+Choices of imputation strategy of sklearn.impute:
+\begin{itemize}
+\item The \href{https://scikit-learn.org/stable/modules/generated/sklearn.impute.SimpleImputer.html}{SimpleImputer} is an univariate imputer, which completes missing values with a descriptive statistic per feature. I chose the median, since it is less sensitive to outliers than the mean and will most likely still produce sensible imputed values for categorical features.
+\item The \href{https://scikit-learn.org/stable/modules/generated/sklearn.impute.KNNImputer.html#sklearn.impute.KNNImputer}{KNNImputer} replaces missing values by the mean value for that feature of its 5 nearest neighbors based on Euclidian distance of their non-missing feature observations. 
+\end{itemize}
+
+Choices of data-level sampling method to yield balanced dataset of imblearn:
+\begin{itemize}
+\item \href{https://imbalanced-learn.org/stable/references/generated/imblearn.over_sampling.SMOTE.html}{SMOTE} as an oversampling approach generates new samples of the minority class by interpolating between existing observations of the minority class, while not distinguishing between easy and hard samples. 
+\item \href{https://imbalanced-learn.org/stable/references/generated/imblearn.under_sampling.TomekLinks.html}{TomekLinks} as an undersampling approach removes samples from the majority class, if they are nearest neighbors to a minority class sample, thus removing noisy borderline examples of the majority class. 
+\item \href{https://imbalanced-learn.org/stable/references/generated/imblearn.combine.SMOTETomek.html}{SMOTETomek} which combines SMOTE and Tomek links.
+\item No sampling method, which would allow algorithmic-level methods to deal with the imbalanced data. 
+\end{itemize}
+
+Since the above pre-processing methods impute missing values by means or medians and generate new samples by interpolation, values for categorical features could be generated which are not actually categorical anymore. Thus, another layer is added to the pipeline, which rounds all observations of categorical features to an integer. \\ 
+
+The last step of pre-processing is  the choice of whether to apply the \href{https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html}{StandardScaler} of sklearn.preprocessing to standardize the features. This will be in particular useful for the SVM, since a RBF kernel assumes features centered around zero and similar variance across features. \\
+
+The first model in the stack is a \href{https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html}{RandomForestClassifier} from sklearn.ensemble. Why? The hyperparameters to be optimized, which will all be sampled uniform, are as following:
+
+\begin{center}
+\begin{tabular}{ | c | c | c | c | c | c | }
+ \hline
+  Hyperparameter & Data type & Search space & Default & Other \\
+ \hline
+ n\_estimators & Integer & [50,500] & 100 & Quantization factor = 50 \\ 
+ criterion & Categorical & \{Gini, Entropy, Log loss\} & Gini &   \\ 
+ max\_depth  & Integer & [5,15] & 10 &  \\ 
+ min\_samples\_split & Integer & [1, 64] & 2 & Log scale \\ 
+ min\_samples\_leaf & Integer & [1, 16] & 1 & Log scale  \\ 
+ max\_features & Integer & [0.1, 0.9] & 0.5 &   \\  
+ class\_weight & Categorical & \{Balanced, Balanced subsample, None\}  & None &  \\ 
+ \hline
+\end{tabular}
+\end{center}
+
+Comment on hyperparameter \\
+
+The second model in the stack is a \href{https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html}{GradientBoostingClassifier} from sklearn.ensemble. Why? The hyperparameters to be optimized are as following:
+\begin{itemize}
+\item 
+\end{itemize}
+
+The third model in the stack is a Support Vector Classifier (\href{https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html#sklearn.svm.SVC}{SVC}) from sklearn.svm. Why? The hyperparameters to be optimized are as following:
+\begin{itemize}
+\item 
+\end{itemize}
+
+Evaluation strategy:
+\begin{itemize}
+\item 3 fold external cross-validation, i.e. 1800 seconds to fit AutoML system per fold.
+\item 3 model, so 600 seconds to find best hyperparameter per model with DEHB.
+\item 4 fold internal cross-validation, i.e. takes 4 times as long per fitting of model.
+\item Not too many fits, thus no hyperparameter tuning for pre-precessing.
+\end{itemize}
+
+Optimization strategy: DEHB by \citet{dehb}:
+\begin{itemize}
+\item High speed-up gains.
+\end{itemize}
+
+Refit model for incumbent and and remove unbalanced sampling from pipeline. \\
+
+Final AutoML system is stacked version of three models with majority voting for final classification.
+
+
+\section{Experiments}
+
+External cross-validation performance vs. baseline:
+
+
+Chosen incumbents with table: \\
+
+
+Example of trajectory for CV fold.
+
+
+\section{Conclusion}
+
+Improvements: Also optimize hyperparameter of pre-processing methods.
+
+
+
+
+\bibliography{References.bib}
 
 % supplemental material -- everything hereafter will be suppressed during
 % submission time if the hidesupplement option is provided!
+
 \appendix
 
+\section{Trajectories}
+
+Bla Bla
+
+\section{Incumbent hyperparameter}
 
 \end{document}
