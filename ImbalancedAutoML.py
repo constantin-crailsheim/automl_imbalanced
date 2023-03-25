@@ -10,13 +10,14 @@ from sklearn.base import ClassifierMixin
 from sklearn.ensemble._base import BaseEnsemble
 from sklearn.model_selection import KFold, cross_val_score
 from sklearn import impute, ensemble, svm
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, FunctionTransformer
+from sklearn.compose import ColumnTransformer
 
-from imblearn import under_sampling, over_sampling
+from imblearn import under_sampling, over_sampling, combine
 from imblearn.pipeline import Pipeline
 
 from dehb import DEHB
-from ConfigSpace import Configuration, ConfigurationSpace, Categorical, Float, Integer
+from ConfigSpace import Configuration, ConfigurationSpace, Categorical, Float, Integer, UniformIntegerHyperparameter
 
 from configuration import scoring
 
@@ -29,13 +30,15 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
                  random_state: int = 42
                  ) -> None:
         super().__init__()
-
+        
         # Check how to make no sampling_strategy possible
         self.sampling_strategies = {
                 "SMOTE": over_sampling.SMOTE(random_state=random_state),
                 # "ADASYN": over_sampling.ADASYN(sampling_strategy="minority", random_state=random_state), # Still throws error as "No samples will be generated with the provided ratio settings."
-                "Tomek": under_sampling.TomekLinks()
+                "Tomek": under_sampling.TomekLinks(),
                 # "NCR": under_sampling.NeighbourhoodCleaningRule()
+                "SMOTETomek": combine.SMOTETomek(random_state=random_state),
+                "None": FunctionTransformer()
             }
         
         # Check whether makes sense for categorical features
@@ -44,6 +47,13 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
                 "KNN": impute.KNNImputer()
             }
         
+        self.scaling_strategy = {
+            "True": StandardScaler(),
+            "False": FunctionTransformer()
+        }
+
+        self.model_dict = {"rf": ensemble.RandomForestClassifier, "gb": ensemble.GradientBoostingClassifier, "svm": svm.SVC}
+        
         self.random_state = random_state
 
         self.cv = KFold(n_splits=4, shuffle=True, random_state=random_state)
@@ -51,6 +61,8 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
         self.min_budget = min_budget
         self.max_budget = max_budget
         self.total_cost = total_cost
+
+        self.model_cost_dict = {"rf": self.total_cost/3, "gb": self.total_cost/3, "svm": self.total_cost/3}
 
         self.dehb_objects = []
         self.trajectories = []
@@ -64,42 +76,52 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
 
         cs = ConfigurationSpace(seed)
 
+        # https://automl.github.io/ConfigSpace/main/api/hyperparameters.html#ConfigSpace.hyperparameters.UniformIntegerHyperparameter
+
         sampling_strategy = Categorical(
-            "sampling_strategy", items=["SMOTE", "Tomek"] # "ADASYN", "NCR", "None"
+            "sampling_strategy", items=["SMOTE", "Tomek", "SMOTETomek", "None"] # "ADASYN", "NCR", "None"
         )
 
         imputation_strategy = Categorical(
             "imputation_strategy", items=["Simple", "KNN"] # "Iterative", 
         )
 
+        scaling_strategy = Categorical(
+            "scaling_strategy", items=["True", "False"]
+        )
+
         if model_name == "rf":
             # https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html
-            n_estimators = Integer(
-                'n_estimators', (50, 500), default=100, log=False, q = 50
+            n_estimators = UniformIntegerHyperparameter(
+                'n_estimators', lower=50, upper=500, default_value=100, log=False, q=50
             )
 
             criterion = Categorical(
-                "criterion", items=["gini", "entropy", "log_loss"]
+                "criterion", items=["gini", "entropy", "log_loss"], default="gini"
             )
 
             max_depth = Integer(
-                'max_depth', (1, 15), default=2, log=False
+                'max_depth', (5, 15), default=10, log=False
             )
+
             min_samples_split = Integer(
-                'min_samples_split', (2, 128), default=10, log=True
+                'min_samples_split', (1, 64), default=2, log=True
             )
+
+            min_samples_leaf = Integer(
+                'min_samples_leaf', (1, 16), default=1, log=True
+            )
+
+            # Check whether makes sense
             max_features = Float(
                 'max_features', (0.1, 0.9), default=0.5, log=False
             )
-            min_samples_leaf = Integer(
-                'min_samples_leaf', (1, 64), default=5, log=True
-            )
 
-            # class_weight = Categorical(
-            #     "class_weight", items=["balanced", "balanced_subsample", "None"]
-            # )
+            class_weight = Categorical(
+                "class_weight", items=["balanced", "balanced_subsample", "None"], default="None"
+            )
         
-            cs.add_hyperparameters([sampling_strategy, imputation_strategy, n_estimators, criterion, max_depth, min_samples_split, max_features, min_samples_leaf]) # , class_weight
+            cs.add_hyperparameters([sampling_strategy, imputation_strategy, scaling_strategy, n_estimators, criterion, max_depth, min_samples_split, min_samples_leaf, max_features, class_weight])
 
         elif model_name == "gb":
             # https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
@@ -128,7 +150,7 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
                 'min_samples_leaf', (1, 32), default=1, log=True
             )
 
-            cs.add_hyperparameters([sampling_strategy, imputation_strategy, loss, learning_rate, n_estimators, criterion, min_samples_split, min_samples_leaf])
+            cs.add_hyperparameters([sampling_strategy, imputation_strategy, scaling_strategy, loss, learning_rate, n_estimators, criterion, min_samples_split, min_samples_leaf])
 
 
         elif model_name == "svm":
@@ -150,11 +172,11 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
                 "tol", (1e-4, 1e-2), default=1e-3, log=True
             )
 
-            # class_weight = Categorical(
-            #     "class_weight", items=["balanced", "None"]
-            # )
+            class_weight = Categorical(
+                "class_weight", items=["balanced", "None"]
+            )
 
-            cs.add_hyperparameters([sampling_strategy, imputation_strategy, C, kernel, shrinking, tol]) # , class_weight
+            cs.add_hyperparameters([sampling_strategy, imputation_strategy, scaling_strategy, C, kernel, shrinking, tol, class_weight])
 
         return cs
     
@@ -182,20 +204,23 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
 
             config_dict = config.get_dictionary()
 
-            sampling_strategy = self.sampling_strategies[config["sampling_strategy"]]
-            config_dict.pop("sampling_strategy")
             imputation_strategy = self.imputation_strategies[config["imputation_strategy"]]
             config_dict.pop("imputation_strategy")
+            sampling_strategy = self.sampling_strategies[config["sampling_strategy"]]
+            config_dict.pop("sampling_strategy")
+            scaling_strategy = self.scaling_strategy[config["scaling_strategy"]]
+            config_dict.pop("scaling_strategy")
 
-            # if kwargs["model_name"] in ["rf", "svm"]:
-            #     if config_dict["class_weight"] == "None":
-            #         config_dict["class_weight"] = None
+            if kwargs["model_name"] in ["rf", "svm"]:
+                if config_dict["class_weight"] == "None":
+                    config_dict["class_weight"] = None
 
             model = Pipeline(
                 steps=[
                     ("imputer", imputation_strategy),
                     ("imb_sampler", sampling_strategy),
-                    ("scaler", StandardScaler()), # Check how to make optional
+                    ("round", self.column_transformer),
+                    ("scaler", scaling_strategy), # Check how to make optional
                     ("estimator", kwargs["model"](**config_dict)),
                 ]
             )
@@ -228,12 +253,19 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
 
         self.y_classes = np.unique(y)
 
+        categorical_features = []
+
+        for col in range(X.shape[1]):
+            if np.all(np.logical_or(X[:,col] % 1 == 0, np.isnan(X[:,col] % 1))):
+                categorical_features += [col]
+
+        self.column_transformer = ColumnTransformer(
+                [("round", FunctionTransformer(np.round), categorical_features),
+                 ("identity", FunctionTransformer(), list(set(range(X.shape[1])) - set(categorical_features)))])
+
         best_inc_score = 0
 
         model_number = 0
-
-        model_dict = {"rf": ensemble.RandomForestClassifier, "gb": ensemble.GradientBoostingClassifier, "svm": svm.SVC}
-        model_cost_dict = {"rf": self.total_cost/3, "gb": self.total_cost/3, "svm": self.total_cost/3}
         
         results_path = output_path + "/dataset_" + output_name + "_time_" + datetime.now().strftime("%Y_%m_%d-%I_%M_%S_%p")
         
@@ -244,7 +276,7 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
                 os.makedirs(results_path)
                 break
 
-        for model_name, model in model_dict.items():
+        for model_name, model in self.model_dict.items():
 
             cs = self.create_search_space(model_name, seed)
 
@@ -260,9 +292,9 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
                 output_path=results_path
             )
 
-            # dehb.reset() # Necessary
+            # dehb.reset() # Necessary?
             trajectory, runtime, history = dehb.run(
-                total_cost=model_cost_dict[model_name],
+                total_cost=self.model_cost_dict[model_name],
                 verbose=verbose,
                 save_intermediate=save_intermediate,
                 # parameters expected as **kwargs in target_function is passed here
@@ -287,21 +319,24 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
                 best_inc_score = dehb.inc_score
         
             best_config = dehb.vector_to_configspace(dehb.inc_config).get_dictionary()
-            
+
+            imputation_strategy = self.imputation_strategies[best_config["imputation_strategy"]]
+            best_config.pop("imputation_strategy")              
             sampling_strategy = self.sampling_strategies[best_config["sampling_strategy"]]
             best_config.pop("sampling_strategy")
-            imputation_strategy = self.imputation_strategies[best_config["imputation_strategy"]]
-            best_config.pop("imputation_strategy")            
+            scaling_strategy = self.scaling_strategy[best_config["scaling_strategy"]]
+            best_config.pop("scaling_strategy")
 
-            # if model_name in ["rf", "svm"]:
-            #     if best_config["class_weight"] == "None":
-            #         best_config["class_weight"] = None
+            if model_name in ["rf", "svm"]:
+                if best_config["class_weight"] == "None":
+                    best_config["class_weight"] = None
 
             self.model.append(Pipeline(
                 steps=[
                     ("imputer", imputation_strategy),
                     ("imb_sampler", sampling_strategy),
-                    ("scaler", StandardScaler()),
+                    ("round", self.column_transformer),
+                    ("scaler", scaling_strategy),
                     ("estimator", model(**best_config)),
                 ]
             ))
