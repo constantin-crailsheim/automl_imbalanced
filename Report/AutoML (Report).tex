@@ -150,63 +150,94 @@ Since the above pre-processing methods impute missing values by means or medians
 
 The last step of pre-processing is  the choice of whether to apply the \href{https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html}{StandardScaler} of sklearn.preprocessing to standardize the features. This will be in particular useful for the SVM, since a RBF kernel assumes features centered around zero and similar variance across features. \\
 
-The first model in the stack is a \href{https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html}{RandomForestClassifier} from sklearn.ensemble. Why? The hyperparameters to be optimized, which will all be sampled uniform, are as following:
+Subsequently, a the hyperparameter for the three models of the stack were optimized, where the search space was defined with the \href{https://automl.github.io/ConfigSpace/main/}{ConfigSpace} package. For almost all hyperparameter, the default was set to the default of the model. The search space was mostly chosen such that it is centered around the default while accounting for log scale. In those cases where the default would be a the lower end of a reasonable search space, the upper bound was chosen higher. \\
 
-\begin{center}
+The first model in the stack is a \href{https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html}{RandomForestClassifier} from sklearn.ensemble. It can handle all data types well and generalizes well by having a low variance due to ensembling over relatively uncorrelated models. The hyperparameters to be optimized, which will all be sampled uniform, are as following:
+
+\begin{table}[h]
 \begin{tabular}{ | c | c | c | c | c | c | }
  \hline
   Hyperparameter & Data type & Search space & Default & Other \\
  \hline
- n\_estimators & Integer & [50,500] & 100 & Quantization factor = 50 \\ 
  criterion & Categorical & \{Gini, Entropy, Log loss\} & Gini &   \\ 
  max\_depth  & Integer & [5,15] & 10 &  \\ 
- min\_samples\_split & Integer & [1, 64] & 2 & Log scale \\ 
+ min\_samples\_split & Integer & [1, 32] & 2 & Log scale \\ 
  min\_samples\_leaf & Integer & [1, 16] & 1 & Log scale  \\ 
  max\_features & Integer & [0.1, 0.9] & 0.5 &   \\  
  class\_weight & Categorical & \{Balanced, Balanced subsample, None\}  & None &  \\ 
  \hline
 \end{tabular}
-\end{center}
+\end{table}
 
 Comment on hyperparameter \\
 
 The second model in the stack is a \href{https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html}{GradientBoostingClassifier} from sklearn.ensemble. Why? The hyperparameters to be optimized are as following:
-\begin{itemize}
-\item 
-\end{itemize}
+
+\begin{table}[h]
+\begin{tabular}{ | c | c | c | c | c | c | }
+ \hline
+  Hyperparameter & Data type & Search space & Default & Other \\
+ \hline
+ loss & Categorical & \{Log loss, Exponential\} & Log loss &  \\ 
+ learning\_rate & Float & [0.01, 1] & 0.1 & Log scale  \\ 
+ criterion & Categorical & \{Friedman MSE, Squared error\} & Friedman MSE &   \\ 
+ min\_samples\_split & Integer & [1, 32] & 2 & Log scale \\ 
+ min\_samples\_leaf & Integer & [1, 16] & 1 & Log scale  \\
+ max\_depth  & Integer & [2,10] & 3 &  \\ 
+ \hline
+\end{tabular}
+\end{table}
+
+Comment on hyperparameter \\
 
 The third model in the stack is a Support Vector Classifier (\href{https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html#sklearn.svm.SVC}{SVC}) from sklearn.svm. Why? The hyperparameters to be optimized are as following:
-\begin{itemize}
-\item 
-\end{itemize}
+\begin{table}[h]
+\begin{tabular}{ | c | c | c | c | c | c | }
+ \hline
+  Hyperparameter & Data type & Search space & Default & Other \\
+ \hline
+ C & Float & [0.1, 10]  & 1.0 & Log scale \\ 
+ kernel & Categorical & \{Linear, Polynomial, RBF, Sigmoid\}  & RBF &   \\ 
+ shrinking & Boolan & \{True, False\} & True &  \\ 
+ tol & Float & [1e-5,1e-3] & 1e-3 &  \\ 
+ class\_weight & Categorical & \{Balanced, None\}  & None &  \\ 
+ \hline
+\end{tabular}
+\end{table}
 
-Evaluation strategy:
-\begin{itemize}
-\item 3 fold external cross-validation, i.e. 1800 seconds to fit AutoML system per fold.
-\item 3 model, so 600 seconds to find best hyperparameter per model with DEHB.
-\item 4 fold internal cross-validation, i.e. takes 4 times as long per fitting of model.
-\item Not too many fits, thus no hyperparameter tuning for pre-precessing.
-\end{itemize}
+Comment on hyperparameter \\
 
-Optimization strategy: DEHB by \citet{dehb}:
-\begin{itemize}
-\item High speed-up gains.
-\end{itemize}
+To optimize the hyperparameter of the AutoML system, \href{https://github.com/automl/dehb}{DEHB} by \citet{dehb} was used, which combines Differential Evolution and Hyperband. Differential evolution generates a new mutant vector from three random parents and then generates the offspring by random selecting values from the new mutant vector with probability $p$ and from on of the corresponding parents otherwise. Hyperband allows to search the whole search space with cheap evaluations and only train more expensive models on promising areas of the search space. The algorithm starts by sampling $N=\eta^{f-1}$ random hyperparameter configurations, which are evaluated at the lowest budget. Then the best $1/\eta$ of the configurations are evaluated at a $\eta$ times as higher fidelity and this process is repeated until the highest fidelity (denoted here by $f$) is reached. After completing one iteration, the algorithm restarts with new instantiations, but evaluating these at the second lowest fidelity. DEHB combines both approaches by generating the configurations for the next fidelity by differential evolution from the lower fidelity as parent pool, where the previous evaluations indicate promising regions. The authors state that DEHB is computationally cheap with high speed-up gains compared to BOHB. Furthermore, it has strong final performance for discrete search spaces, which we have for various hyperparameter. Their experiments have shown that DEHB also outperforms SMAC by mean ranks across all benchmarks. For those reasons, DEHB was chosen as an efficient optimizer. Key features of DEHB: \\
 
-Refit model for incumbent and and remove unbalanced sampling from pipeline. \\
+For the optimization, $\eta=3$ and $f=4$, which implies an initial population of $N=3^{3}=27$. The budget for the RandomForestClassifier and the GradientBoostingClassifier, as indicated by the number of trees in the forest, was set to a minimum of 20 and maximum of 540. For SVC, the budget is indicated by the maximum number of iterations and was set to a minimum of 500 and maximum of 13500. However, the runtime between the lowest and largest budget did not differ too much and was usually around 0.2 to 1.0 seconds. Thus, the SVC mostly benefits from the differential evolution and the successive halving element is not as important since many configurations can be tested irrespecitively. The evaluations for the RandomForestClassifier and GradientBoostingClassifier, the evaluations at higher fidelities are more costly (How costly?) Thus, 40\% of the maximum cost was allocated to optimizing these models, and 20\% was allocated to optimizing the SVC. \\
 
-Final AutoML system is stacked version of three models with majority voting for final classification.
+To evaluate the performance of the AutoML system, 3-fold external and 4-fold internal cross-validation was used. Given a total budget of 3600 seconds per dataset, a total of 1200 second could be used to optimize the AutoML system in each fold, with 480 second allocated to the tree models and 240 seconds to the SVC. To evaluate each hyperparameter configuration, 4-fold cross-validation was used. Since the budget per hyperparameter configuration is not that big after accounting for cross-validation, only a selection of hyperparameters of the actual model were optimized and the hyperparameters of the preprocessing functions were kept at their default values. \\
 
+After the optimization routine, each model is fitted with incumbent configuration and the unbalanced sampling is removed from the pipeline to not change the test set. The final AutoML system is stacked version of three models with majority voting for the final classification.
 
 \section{Experiments}
 
-External cross-validation performance vs. baseline:
+The external cross-validation performance in terms of accuracy of the AutoML system vs. the untuned random forest baseline for each dataset id is shown below:
+
+\begin{table}[h]
+\begin{tabular}{lrr}
+\toprule
+        Model &   976 &  1002 \\
+\midrule
+   Baseline & 0.960 & 0.537 \\
+  AutoML system & 0.985 & 0.810 \\
+\midrule
+  Improvement & 0.025 & 0.273 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The chosen incumbents for each model for dataset x are shown below: \\
 
 
-Chosen incumbents with table: \\
 
 
-Example of trajectory for CV fold.
+Example of trajectory for dataset x.
 
 
 \section{Conclusion}

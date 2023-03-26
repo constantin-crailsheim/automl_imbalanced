@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.5.18)  25 MAR 2023 22:03
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.5.18)  26 MAR 2023 19:38
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -876,52 +876,94 @@ Underfull \hbox (badness 10000) in paragraph at lines 151--152
 
 
 {/usr/local/texlive/2022/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
-Overfull \hbox (73.45663pt too wide) in paragraph at lines 156--169
- [] 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 171--172
+Underfull \hbox (badness 10000) in paragraph at lines 153--154
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 196--197
+Overfull \hbox (5.7639pt too wide) in paragraph at lines 158--170
+[][] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 172--173
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 206--207
+Overfull \hbox (5.84042pt too wide) in paragraph at lines 177--189
+[][] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 191--192
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 208--209
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 210--211
+
+ []
+
+[2]
+Underfull \hbox (badness 10000) in paragraph at lines 212--213
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 214--215
+
+ []
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 235--236
 
  []
 
 (./AutoML (Report).bbl
+Underfull \vbox (badness 2197) has occurred while \output is active []
+
+ [3]
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/it' will be
 (Font)              scaled to size 10.95pt on input line 7.
- [2]) [3] (./AutoML (Report).aux)
+)
+[4] (./AutoML (Report).aux)
 Package rerunfilecheck Info: File `"AutoML (Report)".out' has not changed.
 (rerunfilecheck)             Checksum: 7E950AF055822822B60397539EB919A1;638.
  ) 
 Here is how much of TeX's memory you used:
- 18508 strings out of 478268
- 295769 string characters out of 5846347
- 597943 words of memory out of 5000000
- 36337 multiletter control sequences out of 15000+600000
- 543330 words of font info for 132 fonts, out of 8000000 for 9000
+ 18569 strings out of 478268
+ 297062 string characters out of 5846347
+ 606943 words of memory out of 5000000
+ 36339 multiletter control sequences out of 15000+600000
+ 551512 words of font info for 172 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 98i,12n,145p,1014b,468s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 98i,12n,145p,1660b,388s stack positions out of 10000i,1000n,20000p,200000b,200000s
 {/usr/local/texlive/2022/texmf-dist/fonts/enc/dvips/libertine/lbtn_7grukw.enc
-}{/usr/local/texlive/2022/texmf-dist/fonts/enc/dvips/libertine/lbtn_naooyc.enc}
-{/usr/local/texlive/2022/texmf-dist/fonts/enc/dvips/libertine/lbtn_76gpa5.enc}{
-/usr/local/texlive/2022/texmf-dist/fonts/enc/dvips/libertine/lbtn_z254vq.enc}</
-usr/local/texlive/2022/texmf-dist/fonts/type1/public/libertine/LinLibertineT.pf
+}{/usr/local/texlive/2022/texmf-dist/fonts/enc/dvips/libertine/lbtn_oexx6f.enc}
+{/usr/local/texlive/2022/texmf-dist/fonts/enc/dvips/libertine/lbtn_naooyc.enc}{
+/usr/local/texlive/2022/texmf-dist/fonts/enc/dvips/libertine/lbtn_76gpa5.enc}{/
+usr/local/texlive/2022/texmf-dist/fonts/enc/dvips/libertine/lbtn_z254vq.enc}</u
+sr/local/texlive/2022/texmf-dist/fonts/type1/public/newtx/LibertineMathMI.pfb><
+/usr/local/texlive/2022/texmf-dist/fonts/type1/public/newtx/LibertineMathMI7.pf
 b></usr/local/texlive/2022/texmf-dist/fonts/type1/public/libertine/LinLibertine
-TI.pfb></usr/local/texlive/2022/texmf-dist/fonts/type1/public/libertine/LinLibe
-rtineTZ.pfb>
-Output written on "AutoML (Report).pdf" (3 pages, 231429 bytes).
+T.pfb></usr/local/texlive/2022/texmf-dist/fonts/type1/public/libertine/LinLiber
+tineTI.pfb></usr/local/texlive/2022/texmf-dist/fonts/type1/public/libertine/Lin
+LibertineTZ.pfb></usr/local/texlive/2022/texmf-dist/fonts/type1/public/newtx/tx
+miaX.pfb></usr/local/texlive/2022/texmf-dist/fonts/type1/public/newtx/txsys.pfb
+>
+Output written on "AutoML (Report).pdf" (4 pages, 262863 bytes).
 PDF statistics:
- 83 PDF objects out of 1000 (max. 8388607)
- 70 compressed objects within 1 object stream
- 11 named destinations out of 1000 (max. 500000)
- 43057 words of extra memory for PDF output out of 51595 (max. 10000000)
+ 118 PDF objects out of 1000 (max. 8388607)
+ 95 compressed objects within 1 object stream
+ 16 named destinations out of 1000 (max. 500000)
+ 47153 words of extra memory for PDF output out of 51595 (max. 10000000)
 
