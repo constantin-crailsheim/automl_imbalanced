@@ -10,16 +10,30 @@ import json
 
 # %%
 
-# Insert dataset id here
-dataset = 976
-total_cost = 3600
-total_cv_folds = 3*4
-
 baseline_performance_dict = {976: 0.960, 1002: 0.537}
 automl_performance_dict = {976: 0.985, 1002: 0.810}
 
+performance_df = pd.DataFrame(columns=["Model"] + list(baseline_performance_dict.keys()))
+baseline_performance_dict["Model"] = "Baseline"
+automl_performance_dict["Model"] = "AutoML system"
+
+performance_df = performance_df.append(baseline_performance_dict, ignore_index=True)
+performance_df = performance_df.append(automl_performance_dict, ignore_index=True)
+performance_df.loc[len(performance_df)] = ["Improvement"] + list(performance_df.iloc[1,1:] - performance_df.iloc[0,1:])
+
+print(performance_df.to_latex(index=False))
+
 # baseline_performance_dict = pickle.load(open("results/baseline_performance_dict.pkl", 'rb'))
 # automl_performance_dict = pickle.load(open("results/automl_performance_dict.pkl", 'rb'))
+
+
+# %%
+
+# Insert dataset id here
+dataset = 976
+total_cost = 3600
+outer_cv_folds = 3
+x_max = total_cost/outer_cv_folds * 0.4
 
 # Load objects
 
@@ -77,9 +91,11 @@ plt.plot(time_svm_cv1, performance_svm_cv1, color="lightgreen")
 plt.plot(time_svm_cv2, performance_svm_cv2, color="green")
 plt.plot(time_svm_cv3, performance_svm_cv3, color="darkgreen")
 
-plt.hlines(y=baseline_performance_dict[dataset], xmin=0, xmax=total_cost/total_cv_folds, colors="dimgrey")
+plt.hlines(y=baseline_performance_dict[dataset], xmin=0, xmax=x_max, colors="dimgrey")
 
-plt.plot(total_cost/total_cv_folds, automl_performance_dict[dataset], marker="o", markersize=5, markeredgecolor="purple", markerfacecolor="purple")
+plt.plot(x_max, automl_performance_dict[dataset], marker="o", markersize=5, markeredgecolor="purple", markerfacecolor="purple")
+
+plt.ylim([0.9,1.0])
 
 plt.xlabel("Wallclock time in seconds")
 plt.ylabel("Accuracy")
@@ -89,13 +105,13 @@ plt.legend(["Random forest (CV 1)", "Random forest (CV 2)", "Random forest (CV 3
 if not os.path.exists("trajectory_plots"):
     os.makedirs("trajectory_plots")
 
-plt.savefig("trajectory_plots/plot_dataset_{}.png".format(dataset))
+# plt.savefig("trajectory_plots/plot_dataset_{}.png".format(dataset))
 
 # %%
 
-inc_hp_rf = pd.DataFrame(columns=["Dataset ID", "CV fold", "criterion", "imputation_strategy", "max_depth", "max_features", "min_samples_leaf", "min_samples_split", "n_estimators", "sampling_strategy"])
-inc_hp_gb = pd.DataFrame(columns=["Dataset ID", "CV fold", "criterion", "imputation_strategy", "learning_rate", "loss", "min_samples_leaf", "min_samples_split", "n_estimators", "sampling_strategy"])
-inc_hp_svm = pd.DataFrame(columns=["Dataset ID", "CV fold", "C", "class_weight", "imputation_strategy", "kernel", "sampling_strategy", "shrinking"])
+inc_hp_rf = pd.DataFrame(columns=["Dataset ID", "CV fold", "imputation_strategy", "sampling_strategy", "scaling_strategy", "criterion", "max_depth", "min_samples_split", "min_samples_leaf", "max_features", "class_weight"])
+inc_hp_gb = pd.DataFrame(columns=["Dataset ID", "CV fold", "imputation_strategy", "sampling_strategy", "scaling_strategy", "loss", "learning_rate", "criterion", "min_samples_split", "min_samples_leaf", "max_depth"])
+inc_hp_svm = pd.DataFrame(columns=["Dataset ID", "CV fold", "imputation_strategy", "sampling_strategy", "scaling_strategy", "C", "kernel", "shrinking", "tol", "class_weight"])
 
 # data_ids
 ids = [976]
@@ -135,3 +151,4 @@ display(inc_hp_gb)
 display(inc_hp_svm)
 
 # %%
+

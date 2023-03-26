@@ -21,7 +21,7 @@ random_forest = pipeline.Pipeline(
     ]
 )
 
-total_cost = 600
+total_cost = 3600
 cv_n_splits = 3
 
 cv = KFold(n_splits=cv_n_splits, shuffle=True, random_state=42)
@@ -31,7 +31,7 @@ automl = ImbalancedAutoML(total_cost=total_cost/cv_n_splits)
 baseline_performance_dict = {}
 automl_performance_dict = {}
 
-for id in data_ids[0:1]:
+for id in data_ids:
     dataset = Dataset.from_openml(id)
 
     print(f"Running Classification tree on {dataset.name}")

@@ -133,24 +133,13 @@ print("a")
 
 # %%
 
-import numpy as np
-from ConfigSpace import UniformIntegerHyperparameter, Integer
+import pickle 
 
-rs = np.random.RandomState()
-
-u1 = UniformIntegerHyperparameter("u1", 50, 500, default_value=100, log=False, q=50)
-u2 = Integer("u2", (50, 500), default=100, log=False, q=50)
+history = pickle.load(open("results/dataset_976_cv_1/history_976_model_rf_2023_03_26-05_43_44_PM.pkl", 'rb'))
 
 # %%
 
-set([u1.sample(rs) for _ in range(100)])
-
-# %%
-
-set([u2.sample(rs) for _ in range(100)])
-
-
-
-
+for i in range(len(history)):
+    print(history[i][3])
 
 # %%

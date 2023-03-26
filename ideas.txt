@@ -40,8 +40,16 @@ Visualisation
 
 Comments
 - Outer resampling should be more precise since actual generalization performance, inner resampling can be less precise.
+- 57 evaluations for Random Forest in 480 seconds
+- 46 evaluations for GradientBoosting in 480 seconds - Fitting takes up to 70 seconds for highest fidelity
 
 Problems:
-- Should we combine Tomek links with oversampling, since otherwise too much info lost?
-- Check why n_estimators does not divide by q=50?
+- Check why runtime per algorithm does not perfectly match expected.
+- Check whether fidelities make sense now.
+- Give less budget to SVM
+- 
 
+Questions:
+- How to allocate budget between models?
+- What to set as minimum and maximum budget? # 20-540 is 0.978
+- Use stacking of single best?
