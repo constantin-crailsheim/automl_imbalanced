@@ -1,0 +1,1 @@
+{"config": {"C": 0.5062772272190132, "class_weight": "None", "imputation_strategy": "Simple", "kernel": "linear", "sampling_strategy": "SMOTETomek", "scaling_strategy": "True", "shrinking": true, "tol": 0.001319334980381658}, "score": -0.9898792565850187, "info": {"test_score": 0.9898792565850187, "budget": 4500.0}}

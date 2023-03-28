@@ -1,0 +1,1 @@
+{"config": {"class_weight": "balanced_subsample", "criterion": "gini", "imputation_strategy": "KNN", "max_depth": 20, "max_features": 0.13432302886705047, "min_samples_leaf": 4, "min_samples_split": 19, "sampling_strategy": "SMOTE", "scaling_strategy": "False"}, "score": -0.9701815693974308, "info": {"test_score": 0.9701815693974308, "budget": 90.0}}

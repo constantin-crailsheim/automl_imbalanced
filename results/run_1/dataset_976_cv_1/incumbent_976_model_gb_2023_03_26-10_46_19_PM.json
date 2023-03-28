@@ -1,0 +1,1 @@
+{"config": {"criterion": "friedman_mse", "imputation_strategy": "Simple", "learning_rate": 0.8146304009323089, "loss": "exponential", "max_depth": 8, "min_samples_leaf": 2, "min_samples_split": 3, "sampling_strategy": "SMOTE", "scaling_strategy": "True"}, "score": -0.9828338150523817, "info": {"test_score": 0.9828338150523817, "budget": 270.0}}
