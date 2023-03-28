@@ -67,3 +67,19 @@ for i in range(1,1000):
     if not os.path.exists(results_path):
         os.rename("results/run_x", results_path)
         break
+
+# Delete large files not needed for further analysis
+folders_in_dir = np.array(os.listdir(results_path))
+dataset_folders = np.array(["dataset" in folder_in_dir for folder_in_dir in folders_in_dir])
+dataset_folders = folders_in_dir[dataset_folders]
+
+for dataset_folder in dataset_folders:
+    files_in_folder = np.array(os.listdir(results_path + "/" + dataset_folder))
+    log_files = np.array(["dehb" in file_in_folder for file_in_folder in files_in_folder])
+    log_files = files_in_folder[log_files]
+    history_files = np.array(["history" in file_in_folder for file_in_folder in files_in_folder])
+    history_files = files_in_folder[history_files]
+    for log_file in log_files:
+        os.remove(results_path + "/" + dataset_folder + "/" + log_file)
+    for history_file in history_files:
+        os.remove(results_path + "/" + dataset_folder + "/" + history_file)

@@ -274,7 +274,8 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
             y=None,
             features_dtypes = None,
             verbose: bool = False,
-            save_intermediate: bool = True,
+            save_intermediate: bool = False,
+            save_history: bool = False,
             save_optim_output: bool = True,
             output_path: str = "results/run_x",
             output_name: Union[str, None] = None,
@@ -287,7 +288,8 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
             X (_type_, optional): Array of features. Defaults to None.
             y (_type_, optional): Array of targets. Defaults to None.
             verbose (bool, optional): Whether the DEHB optimizer should be verbose. Defaults to False.
-            save_intermediate (bool, optional): Whether intermediate performance results should be saved. Defaults to True.
+            save_intermediate (bool, optional): Whether intermediate performance results should be saved. Defaults to False.
+            save_intermediate (bool, optional): Whether history should be saved. Defaults to False.
             save_optim_output (bool, optional): Whether the output of DEHB should be saved. Defaults to True.
             output_path (str, optional): The path to store the results. Defaults to "results".
             output_name (Union[str, None], optional): Name of output, should be set to id of dataset. Defaults to None.
@@ -347,6 +349,7 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
                 total_cost=self.model_cost_dict[model_name],
                 verbose=verbose,
                 save_intermediate=save_intermediate,
+                save_history=save_history,
                 # parameters expected as **kwargs in target_function is passed here
                 seed=seed,
                 train_X=X,
