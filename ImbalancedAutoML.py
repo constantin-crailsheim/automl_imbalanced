@@ -9,8 +9,8 @@ import numpy as np
 
 from sklearn.base import ClassifierMixin
 from sklearn.ensemble._base import BaseEnsemble
-from sklearn.model_selection import KFold, cross_val_score
-from sklearn import impute, ensemble, svm
+from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn import impute, ensemble, svm, linear_model
 from sklearn.preprocessing import StandardScaler, FunctionTransformer
 from sklearn.compose import ColumnTransformer
 
@@ -36,7 +36,7 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
             random_state (int, optional): Seed to be used as random state for some models. Defaults to 42.
         """
         super().__init__()
-        
+  
         self.sampling_strategies = {
                 "SMOTE": over_sampling.SMOTE(random_state=random_state),
                 "Tomek": under_sampling.TomekLinks(),
@@ -54,18 +54,24 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
             "False": FunctionTransformer()
         }
 
+        # Dicts of model objects and allocated training cost per algorithm
         self.model_dict = {"rf": ensemble.RandomForestClassifier, "gb": ensemble.GradientBoostingClassifier, "svm": svm.SVC}
-        self.model_to_number_dict = {"rf": 0, "gb": 1, "svm": 2} 
         self.model_cost_dict = {"rf": total_cost*0.4, "gb": total_cost*0.4, "svm": total_cost*0.2} # Check the best split between costs
       
         self.random_state = random_state
 
-        self.cv = KFold(n_splits=4, shuffle=True, random_state=random_state)
+        # Initialise 4-fold cross-validation which ensures that share of targets is preserved in each fold.
+        self.cv = StratifiedKFold(n_splits=4, shuffle=True, random_state=random_state)
 
-        self.min_budget = {"rf": 10, "gb": 10, "svm": 500} # Check sensible max_iter: Alternative 10 to 270
-        self.max_budget = {"rf": 270, "gb": 270, "svm": 13500} # Check sensible max_iter
+        # Set min and max budget of the fidelities for each algorithm.
+        # For random forest and gradient boosting, the budget is the number of trees.
+        # For SVM, the budget is the maximum number of iterations.
+        self.min_budget = {"rf": 10, "gb": 10, "svm": 500}
+        self.max_budget = {"rf": 270, "gb": 270, "svm": 13500}
+
         self.total_cost = total_cost
 
+        # Initialize lists to store objects during optimization
         self.dehb_objects = []
         self.trajectories = []
         self.runtimes = []
@@ -99,7 +105,7 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
         )
 
         if model_name == "rf":
-            # Set the search space of the for the RandomForestClassifier
+            # Set the search space for the RandomForestClassifier
             # https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html
 
             criterion = Categorical(
@@ -124,7 +130,7 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
             cs.add_hyperparameters([sampling_strategy, imputation_strategy, scaling_strategy, criterion, max_depth, min_samples_split, min_samples_leaf, max_features, class_weight])
 
         elif model_name == "gb":
-            # Set the search space of the for the GradientBoostingClassifier
+            # Set the search space for the GradientBoostingClassifier
             # https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
 
             loss = Categorical(
@@ -150,7 +156,7 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
 
 
         elif model_name == "svm":
-            # Set the search space of the for the SVC
+            # Set the search space for the SVC
             # https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html
 
             C = Float(
@@ -160,7 +166,7 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
                 "kernel", items=["linear", "poly", "rbf", "sigmoid"], default="rbf"
             )
             shrinking = Categorical(
-                "shrinking", items=[True, False]
+                "shrinking", items=[True, False], default=True
             )
             tol = Float(
                 "tol", (1e-4, 1e-2), default=1e-3, log=True
@@ -186,7 +192,7 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
             budget (Union[int, float], optional): Budget of current fidelity. Defaults to None.
 
         Returns:
-            Dict: Fitness as negative accuracy, cost as evaluation time and further info of test accuracy and budget.
+            Dict: Fitness as negative accuracy, cost as evaluation time and further info of budget.
         """
             
         train_X = kwargs["train_X"]
@@ -194,17 +200,20 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
         
         start = time.time()
 
-        # Add the budget to the config_dict passed to the function. 
+        # Add the current budget of the fidelity to the config_dict passed to the function. 
         config_dict = config.get_dictionary()
         if kwargs["model_name"] in ["rf", "gb"]:
             config_dict["n_estimators"] = int(budget)
         elif kwargs["model_name"] in ["svm"]:
             config_dict["max_iter"] = int(budget)
-
+        
+        # Make pipeline for current model based on current hyperparameter configuration
         model = self.make_pipeline(config_dict, kwargs["model"], kwargs["model_name"])
 
-        warnings.filterwarnings('ignore', 'Solver terminated early.*') # Ignores max_iter warning
+        # Ignores warning for SVM in case max_iter does not allow for complete convergence.
+        warnings.filterwarnings('ignore', 'Solver terminated early.*')
 
+        # Cross-validated balanced accuracy of model with current hyperparameter configuration
         score = np.mean(cross_val_score(model, train_X, train_y, scoring=scoring, cv=self.cv))
 
         cost = time.time() - start
@@ -215,7 +224,6 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
             "fitness": -score, 
             "cost": cost,
             "info": {
-                "test_score": score,
                 "budget": budget
             }
         }
@@ -235,6 +243,7 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
             _type_: Pipeline of imputer, imbalanced sampler, rounding, scaler and model estimator. 
         """
 
+        # Takes objects of imputer, sampler and scaler from the list of choices and removes hyperparameter from config_dict.
         imputation_strategy = self.imputation_strategies[config_dict["imputation_strategy"]]
         config_dict.pop("imputation_strategy")
         sampling_strategy = self.sampling_strategies[config_dict["sampling_strategy"]]
@@ -242,10 +251,12 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
         scaling_strategy = self.scaling_strategy[config_dict["scaling_strategy"]]
         config_dict.pop("scaling_strategy")
 
+        # Replaces string "None" with None for class_weight if chosen as hyperparameter.
         if model_name in ["rf", "svm"]:
             if config_dict["class_weight"] == "None":
                 config_dict["class_weight"] = None
         
+        # Creates pipeline for current hyperparameter configuration.
         pipeline = Pipeline(
                 steps=[
                     ("imputer", imputation_strategy),
@@ -261,10 +272,11 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
     def fit(self, 
             X=None, 
             y=None,
+            features_dtypes = None,
             verbose: bool = False,
             save_intermediate: bool = True,
             save_optim_output: bool = True,
-            output_path: str = "results",
+            output_path: str = "results/run_x",
             output_name: Union[str, None] = None,
             seed: int = 42
             ):
@@ -285,49 +297,52 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
             _type_: self
         """
 
+        # Stores the number of classed of the target.
         self.y_classes = np.unique(y)
 
-        categorical_features = []
+        # Generates array of column indices of features that are integers.
+        int_features = []
+        if features_dtypes is not None:
+            for col in range(len(features_dtypes)):
+                if np.issubdtype(features_dtypes[col], np.integer):
+                    int_features += [col]
 
-        for col in range(X.shape[1]):
-            if np.all(np.logical_or(X[:,col] % 1 == 0, np.isnan(X[:,col] % 1))):
-                categorical_features += [col]
-
+        # Initialises function that rounds values of features that are integers after imputation and sampling
         self.column_transformer = ColumnTransformer(
-                [("round", FunctionTransformer(np.round), categorical_features),
-                 ("identity", FunctionTransformer(), list(set(range(X.shape[1])) - set(categorical_features)))])
+                [("round", FunctionTransformer(np.round), int_features),
+                 ("identity", FunctionTransformer(), list(set(range(X.shape[1])) - set(int_features)))])
 
-        best_inc_score = 0
-
-        model_number = 0
-        
-        # results_path = output_path + "/dataset_" + output_name + "_time_" + datetime.now().strftime("%Y_%m_%d-%I_%M_%S_%p")
-        
-        # This only works for one run
+        # Makes new directories for each dataset and cross-validation fold in the results folder.
+        # This is easier to access for evaluation than adding time stamps
+        # Caution: This only work properly if the results folder is empty
         for i in range(1,4):
             results_path = output_path + "/dataset_" + output_name + "_cv_" + str(i)
             if not os.path.exists(results_path):
                 os.makedirs(results_path)
                 break
-
+        
+        # Loop through all three models and tune hyperparameter for each
         for model_name, model in self.model_dict.items():
-
+            
+            # Creates a search space for the model with the corresponding hyperparameter
             cs = self.create_search_space(model_name, seed)
 
+            # Checks how many hyperparameters are to be tuned.
             dimensions = len(cs.get_hyperparameters())
 
+            # Initializse DEHB object with min and max budget for current algorithm.
             dehb = DEHB(
                 f=self.target_function, 
                 cs=cs, 
                 dimensions=dimensions, 
                 min_budget=self.min_budget[model_name], 
                 max_budget=self.max_budget[model_name],
-                n_workers=1, # os.cpu_count()-1 throws error, check why
+                n_workers=1,
                 output_path=results_path,
                 seed=seed
             )
 
-            # dehb.reset() # Necessary?
+            # Run optimization with total cost taken from corresponds dictionary
             trajectory, runtime, history = dehb.run(
                 total_cost=self.model_cost_dict[model_name],
                 verbose=verbose,
@@ -342,65 +357,50 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
                 name=output_name + "_model_" + str(model_name) + "_" + datetime.now().strftime("%Y_%m_%d-%I_%M_%S_%p") if output_name else output_name
             )
 
+            # Keep DEHB object and outputs to use later for evaluation of algorithm. 
             self.dehb_objects.append(dehb)
             self.trajectories.append(trajectory)
             self.runtimes.append(runtime)
             self.histories.append(history)
-
-            if  dehb.inc_score < best_inc_score:
-                self.best_model = model_name
-                best_inc_score = dehb.inc_score
-        
+            
+            # Add the highest fidelity budget to the incumbent hyperparameter configuration for final optimization.
             best_config_dict = dehb.vector_to_configspace(dehb.inc_config).get_dictionary()
             if model_name in ["rf", "gb"]:
                 best_config_dict["n_estimators"] = int(self.max_budget[model_name])
             elif model_name in ["svm"]:
                 best_config_dict["max_iter"] = int(self.max_budget[model_name])
 
-            self.model.append(self.make_pipeline(best_config_dict, model, model_name))
+            # Append incumbent model to list used for voting classifier
+            self.model.append((model_name, self.make_pipeline(best_config_dict, model, model_name)))
+        
+        # Initialize and fit voting classifier in incumbent models
+        self.voting_classifier = ensemble.VotingClassifier(self.model)
+        self.voting_classifier.fit(X, y)
 
-            # warnings.resetwarnings()
+        # Remove sampler from pipeline to be used for testing.
+        for model_number in range(3):
+            self.model[model_number][1].steps.pop(1)
 
-            self.model[model_number].fit(X, y)
-
-            self.model[model_number].steps.pop(1)
-
-            model_number += 1
-
-        # Save dehb_objects, trajectories, runtimes and models.
+        # Save trajectories and runtimes. DEHB object and models can be saved optionally.
         if save_optim_output:
-            pickle.dump(self.dehb_objects, open(results_path + "/dehb_objects.pkl", 'wb'))
+            # pickle.dump(self.dehb_objects, open(results_path + "/dehb_objects.pkl", 'wb'))
             pickle.dump(self.trajectories, open(results_path + "/trajectories.pkl", 'wb'))
             pickle.dump(self.runtimes, open(results_path + "/runtimes.pkl", 'wb'))
-            pickle.dump(self.model, open(results_path + "/model.pkl", 'wb'))
+            # pickle.dump(self.model, open(results_path + "/model.pkl", 'wb'))
 
         return self
 
-    def predict(self, X=None, type: str = "stacking"):
+    def predict(self, X=None):
         """
         Predict the target based on features.
 
         Args:
             X (_type_, optional): Array of features. Defaults to None.
-            type (str, optional): Which models of the AutoML to use for prediction. Defaults to "stacking".
 
         Returns:
             _type_: Predictions of target.
         """
-
-        assert type in ["best", "stacking", "rf", "gb", "svm"], "Invalid prediction type."
-        
-        if type == "best":
-            return self.model[self.model_to_number_dict[self.best_model]].predict(X)
-        elif type == "stacking":
-            predictions = []
-            for model_number in range(3):
-                predictions.append(self.model[model_number].predict(X))
-            predictions = np.array(predictions) == self.y_classes[0]
-            prediction = (predictions.sum(axis=0) / predictions.shape[0]) >= 0.5
-            return np.where(prediction, self.y_classes[0], self.y_classes[1])
-        else:
-            return self.model[self.model_to_number_dict[type]].predict(X)
+        return self.voting_classifier.predict(X)
     
     def get_dehb(self):
         """
