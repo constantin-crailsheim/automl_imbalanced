@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.5.18)  26 MAR 2023 19:38
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.5.18)  28 MAR 2023 19:36
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -602,72 +602,188 @@ LaTeX Info: Redefining \cite on input line 694.
 )
 Package hyperref Info: Option `colorlinks' set `true' on input line 72.
 
+(/usr/local/texlive/2022/texmf-dist/tex/latex/float/float.sty
+Package: float 2001/11/08 v1.3d Float enhancements (AL)
+\c@float@type=\count305
+\float@exts=\toks39
+\float@box=\box55
+\@float@everytoks=\toks40
+\@floatcapt=\box56
+)
+(/usr/local/texlive/2022/texmf-dist/tex/latex/adjustbox/adjustbox.sty
+Package: adjustbox 2020/08/19 v1.3 Adjusting TeX boxes (trim, clip, ...)
+
+(/usr/local/texlive/2022/texmf-dist/tex/latex/adjustbox/adjcalc.sty
+Package: adjcalc 2012/05/16 v1.1 Provides advanced setlength with multiple back
+-ends (calc, etex, pgfmath)
+)
+(/usr/local/texlive/2022/texmf-dist/tex/latex/adjustbox/trimclip.sty
+Package: trimclip 2020/08/19 v1.2 Trim and clip general TeX material
+
+(/usr/local/texlive/2022/texmf-dist/tex/latex/graphics/graphicx.sty
+Package: graphicx 2021/09/16 v1.2d Enhanced LaTeX Graphics (DPC,SPQR)
+
+(/usr/local/texlive/2022/texmf-dist/tex/latex/graphics/graphics.sty
+Package: graphics 2021/03/04 v1.4d Standard LaTeX Graphics (DPC,SPQR)
+
+(/usr/local/texlive/2022/texmf-dist/tex/latex/graphics/trig.sty
+Package: trig 2021/08/11 v1.11 sin cos tan (DPC)
+)
+(/usr/local/texlive/2022/texmf-dist/tex/latex/graphics-cfg/graphics.cfg
+File: graphics.cfg 2016/06/04 v1.11 sample graphics configuration
+)
+Package graphics Info: Driver file: pdftex.def on input line 107.
+)
+\Gin@req@height=\dimen188
+\Gin@req@width=\dimen189
+)
+(/usr/local/texlive/2022/texmf-dist/tex/latex/collectbox/collectbox.sty
+Package: collectbox 2012/05/17 v0.4b Collect macro arguments as boxes
+\collectedbox=\box57
+)
+\tc@llx=\dimen190
+\tc@lly=\dimen191
+\tc@urx=\dimen192
+\tc@ury=\dimen193
+Package trimclip Info: Using driver 'tc-pdftex.def'.
+
+(/usr/local/texlive/2022/texmf-dist/tex/latex/adjustbox/tc-pdftex.def
+File: tc-pdftex.def 2019/01/04 v2.2 Clipping driver for pdftex
+))
+\adjbox@Width=\dimen194
+\adjbox@Height=\dimen195
+\adjbox@Depth=\dimen196
+\adjbox@Totalheight=\dimen197
+\adjbox@pwidth=\dimen198
+\adjbox@pheight=\dimen199
+\adjbox@pdepth=\dimen256
+\adjbox@ptotalheight=\dimen257
+
+(/usr/local/texlive/2022/texmf-dist/tex/latex/ifoddpage/ifoddpage.sty
+Package: ifoddpage 2016/04/23 v1.1 Conditionals for odd/even page detection
+\c@checkoddpage=\count306
+)
+(/usr/local/texlive/2022/texmf-dist/tex/latex/varwidth/varwidth.sty
+Package: varwidth 2009/03/30 ver 0.92;  Variable-width minipages
+\@vwid@box=\box58
+\sift@deathcycles=\count307
+\@vwid@loff=\dimen258
+\@vwid@roff=\dimen259
+))
+(/usr/local/texlive/2022/texmf-dist/tex/latex/tools/longtable.sty
+Package: longtable 2021-09-01 v4.17 Multi-page Table package (DPC)
+\LTleft=\skip64
+\LTright=\skip65
+\LTpre=\skip66
+\LTpost=\skip67
+\LTchunksize=\count308
+\LTcapwidth=\dimen260
+\LT@head=\box59
+\LT@firsthead=\box60
+\LT@foot=\box61
+\LT@lastfoot=\box62
+\LT@gbox=\box63
+\LT@cols=\count309
+\LT@rows=\count310
+\c@LT@tables=\count311
+\c@LT@chunks=\count312
+\LT@p@ftn=\toks41
+)
+(/usr/local/texlive/2022/texmf-dist/tex/latex/tools/tabularx.sty
+Package: tabularx 2020/01/15 v2.11c `tabularx' package (DPC)
+
+(/usr/local/texlive/2022/texmf-dist/tex/latex/tools/array.sty
+Package: array 2021/10/04 v2.5f Tabular extension package (FMi)
+\col@sep=\dimen261
+\ar@mcellbox=\box64
+\extrarowheight=\dimen262
+\NC@list=\toks42
+\extratabsurround=\skip68
+\backup@length=\skip69
+\ar@cellbox=\box65
+)
+\TX@col@width=\dimen263
+\TX@old@table=\dimen264
+\TX@old@col=\dimen265
+\TX@target=\dimen266
+\TX@delta=\dimen267
+\TX@cols=\count313
+\TX@ftn=\toks43
+)
+(/usr/local/texlive/2022/texmf-dist/tex/latex/graphics/rotating.sty
+Package: rotating 2016/08/11 v2.16d rotated objects in LaTeX
+\c@r@tfl@t=\count314
+\rotFPtop=\skip70
+\rotFPbot=\skip71
+\rot@float@box=\box66
+\rot@mess@toks=\toks44
+)
 (/usr/local/texlive/2022/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
 File: l3backend-pdftex.def 2022-02-07 L3 backend support: PDF output (pdfTeX)
-\l__color_backend_stack_int=\count305
-\l__pdf_internal_box=\box55
+\l__color_backend_stack_int=\count315
+\l__pdf_internal_box=\box67
 )
 (./AutoML (Report).aux)
 \openout1 = `"AutoML (Report).aux"'.
 
-LaTeX Font Info:    Checking defaults for OML/nxlmi/m/it on input line 116.
+LaTeX Font Info:    Checking defaults for OML/nxlmi/m/it on input line 121.
 LaTeX Font Info:    Trying to load font information for OML+nxlmi on input line
- 116.
+ 121.
 
 (/usr/local/texlive/2022/texmf-dist/tex/latex/newtx/omlnxlmi.fd
 File: omlnxlmi.fd 2013/11/19 Fontinst v1.933 font definitions for OML/nxlmi.
 )
-LaTeX Font Info:    ... okay on input line 116.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 116.
-LaTeX Font Info:    ... okay on input line 116.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 116.
-LaTeX Font Info:    ... okay on input line 116.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 116.
-LaTeX Font Info:    ... okay on input line 116.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 116.
-LaTeX Font Info:    ... okay on input line 116.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 116.
-LaTeX Font Info:    ... okay on input line 116.
-LaTeX Font Info:    Checking defaults for U/ntxexa/m/n on input line 116.
+LaTeX Font Info:    ... okay on input line 121.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 121.
+LaTeX Font Info:    ... okay on input line 121.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 121.
+LaTeX Font Info:    ... okay on input line 121.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 121.
+LaTeX Font Info:    ... okay on input line 121.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 121.
+LaTeX Font Info:    ... okay on input line 121.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 121.
+LaTeX Font Info:    ... okay on input line 121.
+LaTeX Font Info:    Checking defaults for U/ntxexa/m/n on input line 121.
 LaTeX Font Info:    Trying to load font information for U+ntxexa on input line 
-116.
+121.
 
 (/usr/local/texlive/2022/texmf-dist/tex/latex/newtx/untxexa.fd
 File: untxexa.fd 2012/04/16 Fontinst v1.933 font definitions for U/ntxexa.
 )
-LaTeX Font Info:    ... okay on input line 116.
-LaTeX Font Info:    Checking defaults for LMS/ntxsy/m/n on input line 116.
+LaTeX Font Info:    ... okay on input line 121.
+LaTeX Font Info:    Checking defaults for LMS/ntxsy/m/n on input line 121.
 LaTeX Font Info:    Trying to load font information for LMS+ntxsy on input line
- 116.
+ 121.
 
 (/usr/local/texlive/2022/texmf-dist/tex/latex/newtx/lmsntxsy.fd
 File: lmsntxsy.fd 2016/07/02 Fontinst v1.933 font definitions for LMS/ntxsy.
 )
-LaTeX Font Info:    ... okay on input line 116.
-LaTeX Font Info:    Checking defaults for LMX/ntxexx/m/n on input line 116.
+LaTeX Font Info:    ... okay on input line 121.
+LaTeX Font Info:    Checking defaults for LMX/ntxexx/m/n on input line 121.
 LaTeX Font Info:    Trying to load font information for LMX+ntxexx on input lin
-e 116.
+e 121.
 
 (/usr/local/texlive/2022/texmf-dist/tex/latex/newtx/lmxntxexx.fd
 File: lmxntxexx.fd 2016/07/03 Fontinst v1.933 font definitions for LMX/ntxexx.
 )
-LaTeX Font Info:    ... okay on input line 116.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 116.
-LaTeX Font Info:    ... okay on input line 116.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 116.
-LaTeX Font Info:    ... okay on input line 116.
-LaTeX Info: Redefining \microtypecontext on input line 116.
-Package microtype Info: Applying patch `item' on input line 116.
-Package microtype Info: Applying patch `toc' on input line 116.
-Package microtype Info: Applying patch `eqnum' on input line 116.
-Package microtype Info: Applying patch `footnote' on input line 116.
+LaTeX Font Info:    ... okay on input line 121.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 121.
+LaTeX Font Info:    ... okay on input line 121.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 121.
+LaTeX Font Info:    ... okay on input line 121.
+LaTeX Info: Redefining \microtypecontext on input line 121.
+Package microtype Info: Applying patch `item' on input line 121.
+Package microtype Info: Applying patch `toc' on input line 121.
+Package microtype Info: Applying patch `eqnum' on input line 121.
+Package microtype Info: Applying patch `footnote' on input line 121.
 Package microtype Info: Generating PDF output.
 Package microtype Info: Character protrusion enabled (level 2).
 Package microtype Info: Using default protrusion set `alltext'.
 Package microtype Info: Automatic font expansion enabled (level 2),
 (microtype)             stretch: 20, shrink: 20, step: 1, non-selected.
 Package microtype Info: Using default expansion set `alltext-nott'.
-LaTeX Info: Redefining \showhyphens on input line 116.
+LaTeX Info: Redefining \showhyphens on input line 121.
 Package microtype Info: No adjustment of tracking.
 Package microtype Info: No adjustment of interword spacing.
 Package microtype Info: No adjustment of character kerning.
@@ -710,13 +826,13 @@ Package microtype Info: Loading generic protrusion settings for font family
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-\c@mv@tabular=\count306
-\c@mv@boldtabular=\count307
+\c@mv@tabular=\count316
+\c@mv@boldtabular=\count317
 (/usr/local/texlive/2022/texmf-dist/tex/latex/upquote/upquote.sty
 Package: upquote 2012/04/19 v1.3 upright-quote and grave-accent glyphs in verba
 tim
 )
-Package hyperref Info: Link coloring ON on input line 116.
+Package hyperref Info: Link coloring ON on input line 121.
 
 (/usr/local/texlive/2022/texmf-dist/tex/latex/hyperref/nameref.sty
 Package: nameref 2021-04-02 v2.47 Cross-referencing by name of section
@@ -728,32 +844,47 @@ Package: refcount 2019/12/15 v3.6 Data extraction from label references (HO)
 ty
 Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 )
-\c@section@level=\count308
+\c@section@level=\count318
 )
-LaTeX Info: Redefining \ref on input line 116.
-LaTeX Info: Redefining \pageref on input line 116.
-LaTeX Info: Redefining \nameref on input line 116.
+LaTeX Info: Redefining \ref on input line 121.
+LaTeX Info: Redefining \pageref on input line 121.
+LaTeX Info: Redefining \nameref on input line 121.
  (./AutoML (Report).out) (./AutoML (Report).out)
 \@outlinefile=\write3
 \openout3 = `"AutoML (Report).out"'.
 
 Package caption Info: Begin \AtBeginDocument code.
+Package caption Info: float package is loaded.
+Package caption Info: longtable package is loaded.
+
+(/usr/local/texlive/2022/texmf-dist/tex/latex/caption/ltcaption.sty
+Package: ltcaption 2021/01/08 v1.4c longtable captions (AR)
+)
+Package caption Info: rotating package is loaded.
 Package caption Info: End \AtBeginDocument code.
 
 (/usr/local/texlive/2022/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count309
-\scratchdimen=\dimen188
-\scratchbox=\box56
-\nofMPsegments=\count310
-\nofMParguments=\count311
-\everyMPshowfont=\toks39
-\MPscratchCnt=\count312
-\MPscratchDim=\dimen189
-\MPnumerator=\count313
-\makeMPintoPDFobject=\count314
-\everyMPtoPDFconversion=\toks40
-)
+\scratchcounter=\count319
+\scratchdimen=\dimen268
+\scratchbox=\box68
+\nofMPsegments=\count320
+\nofMParguments=\count321
+\everyMPshowfont=\toks45
+\MPscratchCnt=\count322
+\MPscratchDim=\dimen269
+\MPnumerator=\count323
+\makeMPintoPDFobject=\count324
+\everyMPtoPDFconversion=\toks46
+) (/usr/local/texlive/2022/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
+Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
+Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
+85.
+
+(/usr/local/texlive/2022/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
+File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
+e
+))
 *geometry* verbose mode - [ newgeometry ] result:
 * driver: pdftex
 * paper: letterpaper
@@ -789,24 +920,24 @@ Package caption Info: End \AtBeginDocument code.
 (/usr/local/texlive/2022/texmf-dist/tex/latex/fancyhdr/fancyhdr.sty
 Package: fancyhdr 2021/01/28 v4.0.1 Extensive control of page headers and foote
 rs
-\f@nch@headwidth=\skip64
-\f@nch@O@elh=\skip65
-\f@nch@O@erh=\skip66
-\f@nch@O@olh=\skip67
-\f@nch@O@orh=\skip68
-\f@nch@O@elf=\skip69
-\f@nch@O@erf=\skip70
-\f@nch@O@olf=\skip71
-\f@nch@O@orf=\skip72
+\f@nch@headwidth=\skip72
+\f@nch@O@elh=\skip73
+\f@nch@O@erh=\skip74
+\f@nch@O@olh=\skip75
+\f@nch@O@orh=\skip76
+\f@nch@O@elf=\skip77
+\f@nch@O@erf=\skip78
+\f@nch@O@olf=\skip79
+\f@nch@O@orf=\skip80
 )
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 17.28pt on input line 118.
+(Font)              scaled to size 17.28pt on input line 123.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/sb/n' will be
-(Font)              scaled to size 17.28pt on input line 118.
+(Font)              scaled to size 17.28pt on input line 123.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/sb/n' will be
-(Font)              scaled to size 10.95pt on input line 118.
+(Font)              scaled to size 10.95pt on input line 123.
 LaTeX Font Info:    Trying to load font information for OT1+LinuxLibertineT-TLF
- on input line 118.
+ on input line 123.
 
 (/usr/local/texlive/2022/texmf-dist/tex/latex/libertine/OT1LinuxLibertineT-TLF.
 fd
@@ -814,42 +945,42 @@ File: OT1LinuxLibertineT-TLF.fd 2017/03/20 (autoinst) Font definitions for OT1/
 LinuxLibertineT-TLF.
 )
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 10.95pt on input line 118.
+(Font)              scaled to size 10.95pt on input line 123.
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `LinuxLibertineT-TLF' (encoding: OT1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 8.0pt on input line 118.
+(Font)              scaled to size 8.0pt on input line 123.
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 6.1pt on input line 118.
+(Font)              scaled to size 6.1pt on input line 123.
 LaTeX Font Info:    Trying to load font information for U+ntxmia on input line 
-118.
+123.
  (/usr/local/texlive/2022/texmf-dist/tex/latex/newtx/untxmia.fd
 File: untxmia.fd 2018/04/14 Fontinst v1.933 font definitions for U/ntxmia.
 )
 LaTeX Font Info:    Trying to load font information for U+ntxsym on input line 
-118.
+123.
 
 (/usr/local/texlive/2022/texmf-dist/tex/latex/newtx/untxsym.fd
 File: untxsym.fd 2015/03/20 Fontinst v1.933 font definitions for U/ntxsym.
 )
 LaTeX Font Info:    Trying to load font information for U+ntxsyc on input line 
-118.
+123.
 
 (/usr/local/texlive/2022/texmf-dist/tex/latex/newtx/untxsyc.fd
 File: untxsyc.fd 2012/04/12 Fontinst v1.933 font definitions for U/ntxsyc.
 )
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/sb/n' will be
-(Font)              scaled to size 8.0pt on input line 118.
+(Font)              scaled to size 8.0pt on input line 123.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 8.0pt on input line 118.
+(Font)              scaled to size 8.0pt on input line 123.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 10.0pt on input line 120.
+(Font)              scaled to size 10.0pt on input line 125.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/sb/n' will be
-(Font)              scaled to size 12.0pt on input line 128.
+(Font)              scaled to size 12.0pt on input line 133.
 LaTeX Font Info:    Trying to load font information for TS1+LinuxLibertineT-TLF
- on input line 137.
+ on input line 141.
 
 (/usr/local/texlive/2022/texmf-dist/tex/latex/libertine/TS1LinuxLibertineT-TLF.
 fd
@@ -857,18 +988,13 @@ File: TS1LinuxLibertineT-TLF.fd 2017/03/20 (autoinst) Font definitions for TS1/
 LinuxLibertineT-TLF.
 )
 LaTeX Font Info:    Font shape `TS1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 10.95pt on input line 137.
+(Font)              scaled to size 10.95pt on input line 141.
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `LinuxLibertineT-TLF' (encoding: TS1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 
-Underfull \hbox (badness 10000) in paragraph at lines 149--150
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 151--152
+Underfull \hbox (badness 10000) in paragraph at lines 153--154
 
  []
 
@@ -876,77 +1002,218 @@ Underfull \hbox (badness 10000) in paragraph at lines 151--152
 
 
 {/usr/local/texlive/2022/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
-Underfull \hbox (badness 10000) in paragraph at lines 153--154
+Underfull \hbox (badness 10000) in paragraph at lines 155--156
 
  []
 
 
-Overfull \hbox (5.7639pt too wide) in paragraph at lines 158--170
+Underfull \hbox (badness 10000) in paragraph at lines 157--158
+
+ []
+
+
+Overfull \hbox (8.16386pt too wide) in paragraph at lines 163--175
 [][] 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 172--173
+Underfull \hbox (badness 10000) in paragraph at lines 178--179
 
  []
 
 
-Overfull \hbox (5.84042pt too wide) in paragraph at lines 177--189
+Overfull \hbox (8.24039pt too wide) in paragraph at lines 184--196
 [][] 
  []
 
+LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
+(Font)              scaled to size 9.0pt on input line 199.
+LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/m/n' will be
+(Font)              scaled to size 9.0pt on input line 199.
+LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/m/n' will be
+(Font)              scaled to size 7.3pt on input line 199.
+LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/m/n' will be
+(Font)              scaled to size 5.5pt on input line 199.
+LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
+(Font)              scaled to size 7.3pt on input line 199.
 
-Underfull \hbox (badness 10000) in paragraph at lines 191--192
+Underfull \hbox (badness 10000) in paragraph at lines 199--199
+[][]\T1/LinuxLibertineT-TLF/m/n/9 (+20) https://dhirajkumarblog.medium.com/top-
+4-advantages-and-disadvantages-of-support-vector-machine-or-svm-
+ []
+
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [2]
+Underfull \hbox (badness 10000) in paragraph at lines 216--217
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 208--209
+Underfull \hbox (badness 10000) in paragraph at lines 218--219
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 210--211
+Underfull \hbox (badness 10000) in paragraph at lines 220--221
 
  []
 
-[2]
-Underfull \hbox (badness 10000) in paragraph at lines 212--213
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 214--215
+[3]
+Underfull \hbox (badness 10000) in paragraph at lines 241--242
 
  []
 
 
-LaTeX Warning: `h' float specifier changed to `ht'.
+Underfull \hbox (badness 10000) in paragraph at lines 243--244
+
+ []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 235--236
+Underfull \hbox (badness 10000) in paragraph at lines 245--246
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 247--248
 
  []
 
 (./AutoML (Report).bbl
-Underfull \vbox (badness 2197) has occurred while \output is active []
-
- [3]
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/it' will be
 (Font)              scaled to size 10.95pt on input line 7.
-)
-[4] (./AutoML (Report).aux)
+) [4]
+<fig/plot_dataset_976.png, id=77, 462.528pt x 346.896pt>
+File: fig/plot_dataset_976.png Graphic file (type png)
+<use fig/plot_dataset_976.png>
+Package pdftex.def Info: fig/plot_dataset_976.png  used on input line 268.
+(pdftex.def)             Requested size: 325.215pt x 243.92122pt.
+<fig/plot_dataset_980.png, id=79, 462.528pt x 346.896pt>
+File: fig/plot_dataset_980.png Graphic file (type png)
+<use fig/plot_dataset_980.png>
+Package pdftex.def Info: fig/plot_dataset_980.png  used on input line 274.
+(pdftex.def)             Requested size: 325.215pt x 243.92122pt.
+<fig/plot_dataset_1002.png, id=80, 462.528pt x 346.896pt>
+File: fig/plot_dataset_1002.png Graphic file (type png)
+<use fig/plot_dataset_1002.png>
+Package pdftex.def Info: fig/plot_dataset_1002.png  used on input line 280.
+(pdftex.def)             Requested size: 325.215pt x 243.92122pt.
+ [5 <./fig/plot_dataset_976.png> <./fig/plot_dataset_980.png>]
+<fig/plot_dataset_1018.png, id=89, 462.528pt x 346.896pt>
+File: fig/plot_dataset_1018.png Graphic file (type png)
+<use fig/plot_dataset_1018.png>
+Package pdftex.def Info: fig/plot_dataset_1018.png  used on input line 286.
+(pdftex.def)             Requested size: 325.215pt x 243.92122pt.
+<fig/plot_dataset_1019.png, id=90, 462.528pt x 346.896pt>
+File: fig/plot_dataset_1019.png Graphic file (type png)
+<use fig/plot_dataset_1019.png>
+Package pdftex.def Info: fig/plot_dataset_1019.png  used on input line 292.
+(pdftex.def)             Requested size: 325.215pt x 243.92122pt.
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [6 <./fig/plot_dataset_1002.png> <./fig/plot_dataset_1018.png>]
+<fig/plot_dataset_1021.png, id=99, 462.528pt x 346.896pt>
+File: fig/plot_dataset_1021.png Graphic file (type png)
+<use fig/plot_dataset_1021.png>
+Package pdftex.def Info: fig/plot_dataset_1021.png  used on input line 298.
+(pdftex.def)             Requested size: 325.215pt x 243.92122pt.
+<fig/plot_dataset_1040.png, id=100, 462.528pt x 346.896pt>
+File: fig/plot_dataset_1040.png Graphic file (type png)
+<use fig/plot_dataset_1040.png>
+Package pdftex.def Info: fig/plot_dataset_1040.png  used on input line 304.
+(pdftex.def)             Requested size: 325.215pt x 243.92122pt.
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [7 <./fig/plot_dataset_1019.png> <./fig/plot_dataset_1021.png>]
+<fig/plot_dataset_1053.png, id=110, 462.528pt x 346.896pt>
+File: fig/plot_dataset_1053.png Graphic file (type png)
+<use fig/plot_dataset_1053.png>
+Package pdftex.def Info: fig/plot_dataset_1053.png  used on input line 310.
+(pdftex.def)             Requested size: 325.215pt x 243.92122pt.
+<fig/plot_dataset_1461.png, id=111, 462.528pt x 346.896pt>
+File: fig/plot_dataset_1461.png Graphic file (type png)
+<use fig/plot_dataset_1461.png>
+Package pdftex.def Info: fig/plot_dataset_1461.png  used on input line 316.
+(pdftex.def)             Requested size: 325.215pt x 243.92122pt.
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [8 <./fig/plot_dataset_1040.png> <./fig/plot_dataset_1053.png>]
+<fig/plot_dataset_41160.png, id=120, 462.528pt x 346.896pt>
+File: fig/plot_dataset_41160.png Graphic file (type png)
+<use fig/plot_dataset_41160.png>
+Package pdftex.def Info: fig/plot_dataset_41160.png  used on input line 322.
+(pdftex.def)             Requested size: 325.215pt x 243.92122pt.
+
+Overfull \hbox (11.63812pt too wide) in paragraph at lines 378--378
+[]|\T1/LinuxLibertineT-TLF/m/n/9 (-20) balanced_subsample| 
+ []
+
+
+Overfull \hbox (11.63812pt too wide) in paragraph at lines 378--378
+[]|\T1/LinuxLibertineT-TLF/m/n/9 (-20) balanced_subsample| 
+ []
+
+
+Overfull \hbox (11.63812pt too wide) in paragraph at lines 378--378
+[]|\T1/LinuxLibertineT-TLF/m/n/9 (-20) balanced_subsample| 
+ []
+
+
+Overfull \hbox (11.63812pt too wide) in paragraph at lines 378--378
+[]|\T1/LinuxLibertineT-TLF/m/n/9 (-20) balanced_subsample| 
+ []
+
+
+Overfull \hbox (11.63812pt too wide) in paragraph at lines 378--378
+[]|\T1/LinuxLibertineT-TLF/m/n/9 (-20) balanced_subsample| 
+ []
+
+
+Overfull \hbox (11.63812pt too wide) in paragraph at lines 378--378
+[]|\T1/LinuxLibertineT-TLF/m/n/9 (-20) balanced_subsample| 
+ []
+
+
+Overfull \hbox (11.63812pt too wide) in paragraph at lines 378--378
+[]|\T1/LinuxLibertineT-TLF/m/n/9 (-20) balanced_subsample| 
+ []
+
+
+Overfull \hbox (11.63812pt too wide) in paragraph at lines 378--378
+[]|\T1/LinuxLibertineT-TLF/m/n/9 (-20) balanced_subsample| 
+ []
+
+
+Overfull \hbox (11.63812pt too wide) in paragraph at lines 378--378
+[]|\T1/LinuxLibertineT-TLF/m/n/9 (-20) balanced_subsample| 
+ []
+
+
+Overfull \hbox (11.63812pt too wide) in paragraph at lines 378--378
+[]|\T1/LinuxLibertineT-TLF/m/n/9 (-20) balanced_subsample| 
+ []
+
+
+Underfull \vbox (badness 6173) has occurred while \output is active []
+
+ [9 <./fig/plot_dataset_1461.png> <./fig/plot_dataset_41160.png>] [10] [11] [12
+] [13]
+(./AutoML (Report).aux)
 Package rerunfilecheck Info: File `"AutoML (Report)".out' has not changed.
-(rerunfilecheck)             Checksum: 7E950AF055822822B60397539EB919A1;638.
+(rerunfilecheck)             Checksum: 4D9A80E336151A05321DFBE9B705AF02;818.
  ) 
 Here is how much of TeX's memory you used:
- 18569 strings out of 478268
- 297062 string characters out of 5846347
- 606943 words of memory out of 5000000
- 36339 multiletter control sequences out of 15000+600000
- 551512 words of font info for 172 fonts, out of 8000000 for 9000
+ 20473 strings out of 478268
+ 333342 string characters out of 5846347
+ 683072 words of memory out of 5000000
+ 38082 multiletter control sequences out of 15000+600000
+ 580842 words of font info for 239 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 98i,12n,145p,1660b,388s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 98i,12n,145p,1644b,489s stack positions out of 10000i,1000n,20000p,200000b,200000s
 {/usr/local/texlive/2022/texmf-dist/fonts/enc/dvips/libertine/lbtn_7grukw.enc
 }{/usr/local/texlive/2022/texmf-dist/fonts/enc/dvips/libertine/lbtn_oexx6f.enc}
 {/usr/local/texlive/2022/texmf-dist/fonts/enc/dvips/libertine/lbtn_naooyc.enc}{
@@ -960,10 +1227,10 @@ tineTI.pfb></usr/local/texlive/2022/texmf-dist/fonts/type1/public/libertine/Lin
 LibertineTZ.pfb></usr/local/texlive/2022/texmf-dist/fonts/type1/public/newtx/tx
 miaX.pfb></usr/local/texlive/2022/texmf-dist/fonts/type1/public/newtx/txsys.pfb
 >
-Output written on "AutoML (Report).pdf" (4 pages, 262863 bytes).
+Output written on "AutoML (Report).pdf" (13 pages, 720762 bytes).
 PDF statistics:
- 118 PDF objects out of 1000 (max. 8388607)
- 95 compressed objects within 1 object stream
- 16 named destinations out of 1000 (max. 500000)
- 47153 words of extra memory for PDF output out of 51595 (max. 10000000)
+ 202 PDF objects out of 1000 (max. 8388607)
+ 149 compressed objects within 2 object streams
+ 39 named destinations out of 1000 (max. 500000)
+ 61547 words of extra memory for PDF output out of 61914 (max. 10000000)
 
