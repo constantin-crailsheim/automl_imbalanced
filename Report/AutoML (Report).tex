@@ -64,9 +64,9 @@
 \usepackage{hyperref}
 \hypersetup{
     colorlinks=true,
-    linkcolor=blue,
-    filecolor=magenta,      
-    urlcolor=cyan,
+    linkcolor=black,
+    filecolor=black,      
+    urlcolor=black,
     pdftitle={Overleaf Example},
     pdfpagemode=FullScreen,
     }
@@ -77,7 +77,7 @@
 \usepackage{caption}
 \usepackage{rotating}
 
-\title{Example Submission Final Project AutoML Lecture WS 2022/2023}
+\title{AutoML project: Tuning a majority voting ensemble consisting of random forest classifier, gradient boosting classifier and SVM classifier using DEHB}
 
 % The syntax for adding an author is
 %
@@ -123,6 +123,7 @@
 \maketitle
 
 \begin{abstract}
+The AutoML system tunes a ML pipeline of an imputer, an optional sampler, an optional standardizer and a choice of three models. Since the tasks are imbalanced tabular data, a random forest classifier, a gradient boosting classifier and a SVM classifier are reasonable choices, which should yield a good overall prediction by majority voting. I used DEHB as an optimizer, which combines the advantages of differential evolutions and hyperband, i.e., generating promising new hyperparameter configurations for longer training based on initial cheap evaluations. Overall, the improvement in performance compared to the untuned random forest classifier baseline is 0.6\% to 25.3\%. Thus the AutoML system outperforms the baseline across all datasets. The source code is available at: \newline \url{https://github.com/constantin-crailsheim/automl_imbalanced}
 \end{abstract}
 
 % content will be automatically hidden during submission
@@ -132,7 +133,7 @@
 
 \section{Introduction}
 
-The AutoML system should be able to deal with missing values and yield good performance as measured by the balanced accuracy on imbalanced datasets. Thus, it optimizes a ML pipeline consisting of five elements. First, a choice of two imputers replaces missing values. Then, an optional sampling method is applied to deal with imbalance in the targets, which consists of both under- and oversampling methods. Next, the pre-processed integer features are rounded such that they do not take values that would not appear in the training data. After optionally normalizing all features, three different models were fitted, i.e., a random forest classifier, a gradient boosting classifier and a SVM classifier. The choice of pre-processing and the hyperparameters of the model were optimized by DEHB, which is a computationally cheap optimizer that works well on discrete search spaces. The final predictions are derived by majority voting of the individual predictions of the best pipelines for each model. This means that the overall predictions should be good of the errors of the model are not too correlated.   
+The objective of the AutoML system is to yield good performance as measured by the balanced accuracy on imbalanced tabular datasets and be able to deal with missing values. Thus, it optimizes a ML pipeline consisting of five elements. First, a choice of two imputers replaces missing values. Then, an optional sampling method is applied to deal with imbalance in the targets, which consists of both under- and oversampling methods. Next, the pre-processed integer features are rounded such that they do not take values that would not appear in the training data. After optionally normalizing all features, three different models were fitted, i.e., a random forest classifier, a gradient boosting classifier and a SVM classifier. The choice of pre-processing and the hyperparameters of the model were optimized by DEHB, which is a computationally cheap optimizer that works well on discrete search spaces. The final predictions are derived by majority voting of the individual predictions of the best pipelines for each model. This means that the overall predictions should be good of the errors of the model are not too correlated. I used a M1 Pro chip to run the optimization.
 
 \section{Method}
 
@@ -159,7 +160,7 @@ Subsequently, the hyperparameters of the three models of the ensemble were optim
 The first model in the ensemble is a \href{https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html}{RandomForestClassifier} from sklearn.ensemble. It can handle all data types well and generalizes well by having a low variance due to ensembling over relatively uncorrelated models. The hyperparameters, which will all be sampled uniformly, are:
 
 \vspace{-0.3cm}
-\begin{table}[h]
+\begin{table}[H]
 \begin{tabular}{ | c | c | c | c | c | c | }
  \hline
   Hyperparameter & Data type & Search space & Default & Other \\
@@ -180,7 +181,7 @@ The class\_weight is an algorithm-level method that deals with imbalanced data a
 The second model in the stack is a \href{https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html}{GradientBoostingClassifier} from sklearn.ensemble. It has strong predictive performance by iteratively fitting weak learners on the error of the previous learner and has similar advantages as the RandomForestClassifier. The hyperparameters are:
 
 \vspace{-0.3cm}
-\begin{table}[h]
+\begin{table}[H]
 \begin{tabular}{ | c | c | c | c | c | c | }
  \hline
   Hyperparameter & Data type & Search space & Default & Other \\
@@ -213,13 +214,13 @@ The third model in the stack is a Support Vector Classifier (\href{https://sciki
 \end{tabular}
 \end{table}
 
-To optimize the hyperparameter of the AutoML system, I used \href{https://github.com/automl/dehb}{DEHB} by \citet{dehb}, which combines Differential Evolution and Hyperband. Differential evolution generates a new mutant vector from three random parents and then generates the offspring by randomly selecting values from the new mutant vector with probability $p$ and from on of the corresponding parents otherwise. Hyperband allows to search the whole search space with cheap evaluations and only train more expensive models on promising areas of the search space. The algorithm starts by sampling $N=\eta^{f-1}$ random hyperparameter configurations, which are evaluated at the lowest budget. Then the best $1/\eta$ of the configurations are evaluated at a $\eta$ times as higher fidelity and this process is repeated until the highest fidelity (denoted here by $f$) is reached. After completing one iteration, the algorithm restarts with new instantiations and evaluates these at the second lowest fidelity. DEHB combines both approaches by generating the configurations for the next fidelity by differential evolution from the lower fidelity as parent pool, where the previous evaluations indicate promising regions. The authors state that DEHB is computationally cheap with high speed-up gains compared to BOHB. Furthermore, it has strong final performance for discrete search spaces, which we have for various hyperparameter. Their experiments have shown that DEHB also outperforms SMAC by mean ranks across all chosen benchmarks. For those reasons, DEHB was chose as an efficient optimizer. \\
+To optimize the hyperparameter of the AutoML system, I used \href{https://github.com/automl/dehb}{DEHB} by \citet{dehb}, which combines differential evolution and hyperband. Differential evolution constructs a new mutant vector from three random parents and then generates the offspring by randomly selecting values from the new mutant vector with probability $p$ and otherwise from one of the corresponding parents. Hyperband allows to search the whole search space with cheap evaluations and only trains more costly models on promising areas of the search space. The algorithm starts by sampling $N$ random hyperparameter configurations, which are evaluated at the lowest budget. Then the best $1/\eta$ of these configurations are evaluated at a $\eta$-times higher budget and this process is repeated until the highest fidelity (denoted here by $f$) is reached, thus $N=\eta^{f-1}$. After completing one iteration, the algorithm restarts with new instantiations and evaluates these at the second lowest fidelity, thereby hedging against bad initializations. DEHB combines both approaches by generating the hyperparameter configurations for the next fidelity by differential evolution from the lower fidelity as parent pool. The authors state that DEHB is computationally cheap with high speed-up gains compared to BOHB. Furthermore, it has strong final performance for discrete search spaces, which I have for various hyperparameters. The authors experiments have shown that DEHB also outperforms SMAC by mean ranks across all chosen benchmarks. For those reasons, I chose DEHB as an efficient optimizer for this problem. \\
 
-For the optimization, $\eta=3$ and $f=4$ was set, which implies an initial population of $N=3^{3}=27$. The budget for the RandomForestClassifier and the GradientBoostingClassifier, as indicated by the number of trees in the forest, was set to a minimum of 10 and maximum of 270. For SVC, the budget is indicated by the maximum number of iterations and was set to a minimum of 500 and maximum of 13500. However, the runtime between the lowest and largest budget did not differ too much and was relatively cheap compared to the forest based classifiers. Thus, the SVC mostly benefits from the differential evolution and the successive halving element is not as important since many configurations can be tested irrespecitively. Thus, 40\% of the maximum cost was allocated to optimizing the forest based models, and 20\% was allocated to optimizing the SVC. \\
+For the optimization, I set $\eta=3$ and $f=4$, which implies an initial population of $N=3^{3}=27$. I set the budget for the RandomForestClassifier and the GradientBoostingClassifier, as indicated by the number of trees in the forest, to a minimum of 10 and maximum of 270. For SVC, the budget is indicated by the maximum number of iterations and I set it to a minimum of 500 and maximum of 13500. However, the runtime between the lowest and largest budget did not differ too much since the SVM optimizer most likely already converged in most cases and the evaluation was relatively cheap compared to the forest based classifiers for most datasets. Thus, the SVC mostly benefits from differential evolution and the successive halving element is not as important since many configurations can be tested irrespecitively. Hence, I allocated 40\% of the maximum cost to optimizing the forest based models and 20\% to optimizing the SVC. \\
 
-To evaluate the performance of the AutoML system, 3-fold external and 4-fold internal cross-validation was used. Given a total budget of 3600 seconds per dataset, a total of 1200 second could be used to optimize the AutoML system in each fold. To evaluate each hyperparameter configuration, 4-fold cross-validation was used. Since the budget is not that larger after accounting for cross-validation, only a selection of hyperparameters of the actual model were optimized and the hyperparameters of the preprocessing functions were kept at their default values. \\
+To evaluate the performance of the AutoML system, I used 3-fold external and 4-fold internal cross-validation. Given a total budget of 3600 seconds per dataset, a total of 1200 second could be used to optimize the AutoML system in each fold. Since the budget is not that larger after accounting for cross-validation, I tuned only a selection of hyperparameters of the actual model and the hyperparameters of the preprocessing functions were kept at their default values. \\
 
-After the optimization routine, each model is fitted with incumbent configuration and the unbalanced sampling is removed from the pipeline to not change the test set. The final AutoML system is an ensemble of three models with majority voting for the final classification. 
+After the optimization routine, each model is fitted with incumbent configuration and the unbalanced sampling is removed from the pipeline to not sample from the test set. The final AutoML system is an ensemble of three models with majority voting for the final classification. 
 
 \section{Experiments}
 
@@ -238,17 +239,17 @@ AutoML system & 0.989 & 0.982 & 0.788 & 0.799 & 0.996 & 0.957 & 0.992 & 0.661 & 
 \end{tabular}
 \end{table}
 
-The AutoML system outperforms the baseline across all datasets with an improvement between 0.6\% and 25.3\%. Include test? \\
+Hence, the AutoML system outperforms the baseline across all datasets with an improvement between 0.6\% and 25.3\%. Include test? \\
 
-The plots of the trajectories for each dataset are in appendix A. For dataset 976, 980 1019, the SVC is the top performing estimator, followed by gradient boosting classifier and random forest classifier. For the other datasets, the ranking is not as clear. For the last two datasets, the SVM has the worst performance, most likely since SVMs are costlier to fit given the large number of observations and less iterations to tune the hyperparameter were possible. This probably also compromise the overall performance of the AutoML system. The benchmarks are outperformed usually after at most 80 seconds, except for the last two datasets due to the underperforming SVM. The final externally cross-validated performance tends to be a bit lower than the performances of the individual algorithms. This probably arises, since the performance of the individual algorithms is overly optimistic, since it is hyperparameters are tuned on that specific fold. \\
+The plots of the trajectories for each dataset are in appendix A. For dataset 976, 980 1019, the SVC is the top performing estimator, followed by the GradientBoostingClassifier and the RandomForestClassifier. For the other datasets, the ranking is not as clear. For the last two datasets, the SVC has the worst performance, most likely since SVCs are costlier to fit given the large number of observations and less iterations to tune the hyperparameters were possible. This probably also compromise the overall performance of the AutoML system. The benchmarks are usually outperformed after at most 80 seconds, except for the last two datasets due to the underperforming SVC. The final externally cross-validated performance tends to be a bit lower than the performances of the individual algorithms. This probably arises, since the performance of the individual algorithms is overly optimistic due to the hyperparameters being tuned on that specific fold. \\
 
 Write sth about final performance. \\
 
-The chosen incumbents for each model for all datasets are shown below are shown in the appendix. The key trends are as following: The preferred sampling method for RandomForestClassifier and SVC is quite mixed, but for the GradientBoostingClassifier only oversampling or mixed methods were considered better. As expected, SVC uses the StandardScaler for all datasets except 1019 (Why?). If no sampling method was chosen, the imbalanced was always accounted for by class weights. \\
+The chosen incumbents for each model for all datasets are shown in the appendix. The key trends are as following: The preferred sampling method for RandomForestClassifier and SVC is quite mixed, but for the GradientBoostingClassifier only oversampling or mixed methods were considered better. As expected, SVC uses the StandardScaler for all datasets except 1019 (Why?). If no sampling method was chosen, the imbalanced was always accounted for by class weights. \\
 
 \section{Conclusion}
 
-The AutoML system outperforms the benchmark across all datasets and has thus proven to be useful. However, some improvements are still possible if a larger budget would be available. The hyperparameters of the pre-processing methods could be also tuned to fit better to each dataset and algorithm. Furthermore, a stacking classifier could be trained on the three algorithms, which would allow to find the best combination of the predictions of each individual algorithm for the final prediction of the AutoML system. This would be in particular beneficial to the last two datasets, where the ensemble performance was significantly worse than the two best individual performances. I conducted experiments with stacking, but the training on the final incumbents with the highest budgets took fairly long, thus I decided to use the budget rather to improve the performance of the individual estimators.
+The AutoML system outperforms the benchmark across all datasets and has thus has proven to be useful. However, some improvements are still possible if a larger budget would be available. The hyperparameters of the pre-processing methods could be also tuned to fit better to each dataset and algorithm. Furthermore, a stacking classifier could be trained on the three algorithms, which would allow to find the best combination of the predictions of each individual algorithm for the final prediction of the AutoML system. This would be in particular beneficial to the last two datasets, where the ensemble performance was significantly worse than the two best individual performances. I conducted experiments with stacking, but the training on the final incumbents with the highest budgets took fairly long, thus I decided to use the budget rather to improve the performance of the individual estimators.
 
 
 \bibliography{References.bib}
