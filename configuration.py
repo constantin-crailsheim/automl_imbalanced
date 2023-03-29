@@ -2,7 +2,7 @@ data_ids = (976, 980, 1002, 1018, 1019, 1021, 1040, 1053, 1461, 41160)
 scoring = "balanced_accuracy"
 
 # Set output path
-output_path = "results/run_1"
+output_path = "results/run_2"
 
 # Set total maximum cost of optimisation in seconds.
 total_cost = 30
