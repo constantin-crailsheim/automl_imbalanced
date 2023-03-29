@@ -1,0 +1,33 @@
+\begin{tabular}{lllllrllrl}
+Dataset ID & CV fold & Imputer & Sampler & Scaler & C & Kernel & Shrinking & Tolerance & Class weight \\
+976 & 1 & KNN & None & True & 6.812 & rbf & True & 0.000 & balanced \\
+976 & 2 & Simple & SMOTETomek & True & 5.942 & rbf & True & 0.002 & balanced \\
+976 & 3 & Simple & Tomek & True & 5.043 & rbf & False & 0.001 & balanced \\
+980 & 1 & Simple & SMOTETomek & True & 2.461 & poly & False & 0.004 & balanced \\
+980 & 2 & Simple & SMOTE & True & 0.811 & poly & True & 0.002 & balanced \\
+980 & 3 & KNN & Tomek & False & 1.221 & rbf & False & 0.004 & balanced \\
+1002 & 1 & KNN & Tomek & True & 0.231 & linear & False & 0.003 & balanced \\
+1002 & 2 & KNN & SMOTETomek & True & 0.128 & sigmoid & True & 0.001 & balanced \\
+1002 & 3 & Simple & SMOTETomek & True & 0.385 & linear & False & 0.005 & balanced \\
+1018 & 1 & Simple & SMOTE & True & 0.202 & sigmoid & False & 0.001 & None \\
+1018 & 2 & Simple & None & True & 0.245 & linear & True & 0.001 & balanced \\
+1018 & 3 & Simple & SMOTETomek & True & 0.135 & linear & False & 0.000 & balanced \\
+1019 & 1 & KNN & Tomek & False & 9.389 & poly & False & 0.000 & None \\
+1019 & 2 & KNN & SMOTETomek & False & 1.539 & poly & False & 0.001 & None \\
+1019 & 3 & KNN & SMOTETomek & False & 9.674 & rbf & True & 0.002 & balanced \\
+1021 & 1 & KNN & None & True & 7.955 & rbf & False & 0.001 & balanced \\
+1021 & 2 & KNN & None & True & 8.528 & rbf & False & 0.000 & balanced \\
+1021 & 3 & KNN & Tomek & True & 7.188 & rbf & True & 0.001 & balanced \\
+1040 & 1 & Simple & SMOTETomek & True & 0.506 & linear & True & 0.001 & None \\
+1040 & 2 & KNN & Tomek & True & 0.126 & linear & False & 0.003 & balanced \\
+1040 & 3 & Simple & SMOTETomek & True & 1.166 & sigmoid & True & 0.002 & None \\
+1053 & 1 & Simple & SMOTETomek & True & 2.294 & rbf & False & 0.000 & None \\
+1053 & 2 & Simple & Tomek & True & 3.811 & rbf & False & 0.009 & balanced \\
+1053 & 3 & KNN & SMOTETomek & True & 1.595 & linear & False & 0.001 & balanced \\
+1461 & 1 & Simple & SMOTETomek & True & 0.485 & sigmoid & False & 0.000 & None \\
+1461 & 2 & Simple & Tomek & True & 3.770 & sigmoid & True & 0.001 & balanced \\
+1461 & 3 & Simple & None & True & 0.533 & sigmoid & False & 0.009 & balanced \\
+41160 & 1 & KNN & Tomek & True & 8.008 & rbf & False & 0.001 & None \\
+41160 & 2 & KNN & SMOTE & True & 0.227 & rbf & True & 0.001 & balanced \\
+41160 & 3 & Simple & SMOTE & True & 9.759 & sigmoid & False & 0.000 & balanced \\
+\end{tabular}

@@ -1,70 +1,54 @@
-# %%
 
 import os
 import pickle
+import warnings
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from configuration import data_ids
+from configuration import data_ids, output_path, total_cost, outer_cv_folds, y_min_dict, y_max_dict
 import json
-
-# %%
-
-# Set path were results are stored.
-
-path = "results/run_1"
-
-# %%
 
 # Store Latex table of benchmark perfomance across all datasets
 
-baseline_performance_dict = pickle.load(open(path + "/baseline_performance_dict.pkl", 'rb'))
-automl_performance_dict = pickle.load(open(path + "/automl_performance_dict.pkl", 'rb'))
+baseline_performance_dict = pickle.load(open(output_path + "/baseline_performance_dict.pkl", 'rb'))
+automl_performance_dict = pickle.load(open(output_path + "/automl_performance_dict.pkl", 'rb'))
+# mcnemar_dict = pickle.load(open(output_path + "/mcnemar_dict.pkl", 'rb'))
 
 performance_df = pd.DataFrame(columns=["Model"] + list(baseline_performance_dict.keys()))
 baseline_performance_dict["Model"] = "Baseline"
 automl_performance_dict["Model"] = "AutoML system"
+# mcnemar_dict["Model"] = "McNemar test"
 
-performance_df = performance_df.append(baseline_performance_dict, ignore_index=True)
-performance_df = performance_df.append(automl_performance_dict, ignore_index=True)
-performance_df.loc[len(performance_df)] = ["Improvement"] + list(performance_df.iloc[1,1:] - performance_df.iloc[0,1:])
+# for id in data_ids[:1]:
+#     baseline_performance_dict[id] = baseline_performance_dict[id][3]
+#     automl_performance_dict[id] = automl_performance_dict[id][3]
+#     mcnemar_dict[id] = mcnemar_dict[id][3]
 
-if not os.path.exists("plots_tables"):
-    os.makedirs("plots_tables")
-performance_df.to_latex("plots_tables/performance_table.txt", index=False, float_format="{:0.3f}".format)
+performance_df = pd.concat([performance_df, pd.DataFrame([baseline_performance_dict])], ignore_index=True)
+performance_df = pd.concat([performance_df, pd.DataFrame([automl_performance_dict])], ignore_index=True)
+performance_df.loc[len(performance_df)] = ["Improvement"] + list(performance_df.iloc[1,1:].to_numpy() - performance_df.iloc[0,1:])
+# performance_df = pd.concat([performance_df, pd.DataFrame([mcnemar_dict])], ignore_index=True)
 
-# %%
+performance_df.style.hide(axis="index").format(precision=3).to_latex(output_path + "/performance_table.txt") # float_format="{:0.3f}".format
 
 # Store plots of trajectories over runtime for each dataset
 
-total_cost = 3600
-outer_cv_folds = 3
 x_max = total_cost/outer_cv_folds * 0.4
-
-y_min_dict = {976: 0.905, 980: 0.89, 1002: 0.5, 1018: 0.5, 1019: 0.965, 1021: 0.883, 1040: 0.955, 1053: 0.55, 1461: 0.6, 41160: 0.4}
-
-y_max_dict = {976: 1.0, 980: 1.0, 1002: 0.84, 1018: 0.85, 1019: 1.0, 1021: 0.975, 1040: 0.995, 1053: 0.685, 1461: 0.86, 41160: 0.8}
 
 # Load objects
 
 for dataset in data_ids:
 
-    path_cv1 = path + "/dataset_{}_cv_1".format(dataset)
-    path_cv2 = path + "/dataset_{}_cv_2".format(dataset)
-    path_cv3 = path + "/dataset_{}_cv_3".format(dataset)
+    path_cv1 = output_path + "/dataset_{}_cv_1".format(dataset)
+    path_cv2 = output_path + "/dataset_{}_cv_2".format(dataset)
+    path_cv3 = output_path + "/dataset_{}_cv_3".format(dataset)
 
-    dehb_objects_cv1 = pickle.load(open(path_cv1 + "/dehb_objects.pkl", 'rb'))
-    model_cv1 = pickle.load(open(path_cv1 + "/model.pkl", 'rb'))
     runtimes_cv1 = pickle.load(open(path_cv1 + "/runtimes.pkl", 'rb'))
     trajectories_cv1 = pickle.load(open(path_cv1 + "/trajectories.pkl", 'rb'))
 
-    dehb_objects_cv2 = pickle.load(open(path_cv2 + "/dehb_objects.pkl", 'rb'))
-    model_cv2 = pickle.load(open(path_cv2 + "/model.pkl", 'rb'))
     runtimes_cv2 = pickle.load(open(path_cv2 + "/runtimes.pkl", 'rb'))
     trajectories_cv2 = pickle.load(open(path_cv2 + "/trajectories.pkl", 'rb'))
 
-    dehb_objects_cv3 = pickle.load(open(path_cv3 + "/dehb_objects.pkl", 'rb'))
-    model_cv3 = pickle.load(open(path_cv3 + "/model.pkl", 'rb'))
     runtimes_cv3 = pickle.load(open(path_cv3 + "/runtimes.pkl", 'rb'))
     trajectories_cv3 = pickle.load(open(path_cv3 + "/trajectories.pkl", 'rb'))
 
@@ -116,12 +100,11 @@ for dataset in data_ids:
     plt.title("Trajectories of dataset {}".format(dataset))
     plt.legend(["Random forest (CV 1)", "Random forest (CV 2)", "Random forest (CV 3)", "Gradient boosting (CV 1)", "Gradient boosting (CV 2)", "Gradient boosting (CV 3)", "SVM (CV 1)", "SVM (CV 2)", "SVM (CV 3)", "RF baseline (ECV)", "AutoML sytem (ECV)"])
 
-    if not os.path.exists("plots_tables/trajectory_plots"):
-        os.makedirs("plots_tables/trajectory_plots")
+    if not os.path.exists(output_path + "/trajectory_plots"):
+        os.makedirs(output_path + "/trajectory_plots")
 
-    plt.savefig("plots_tables/trajectory_plots/plot_dataset_{}.png".format(dataset))
+    plt.savefig(output_path + "/trajectory_plots/plot_dataset_{}.png".format(dataset))
 
-# %%
 
 # Store Latex table of incumbent hyperparameter for each algorithm for all datasets
 
@@ -132,7 +115,7 @@ inc_hp_svm = pd.DataFrame(columns=["Dataset ID", "CV fold", "imputation_strategy
 for id in data_ids:
     for cv_fold in range(1,4):
 
-        path_cv = path + '/dataset_{}_cv_{}'.format(id,cv_fold)
+        path_cv = output_path + '/dataset_{}_cv_{}'.format(id,cv_fold)
 
         files_in_dir = np.array(os.listdir(path_cv))
 
@@ -145,36 +128,22 @@ for id in data_ids:
             hp_dict["Dataset ID"] = id
             hp_dict["CV fold"] = cv_fold
 
+            warnings.simplefilter(action='ignore', category=FutureWarning)
             if "rf" in file_name:
-                inc_hp_rf = inc_hp_rf.append(hp_dict, ignore_index=True)
+                inc_hp_rf = pd.concat([inc_hp_rf, pd.DataFrame([hp_dict])], ignore_index=True)
             elif "gb" in file_name:
-                inc_hp_gb = inc_hp_gb.append(hp_dict, ignore_index=True)
+                inc_hp_gb = pd.concat([inc_hp_gb, pd.DataFrame([hp_dict])], ignore_index=True)
             elif "svm" in file_name:
-                inc_hp_svm = inc_hp_svm.append(hp_dict, ignore_index=True)
+                inc_hp_svm = pd.concat([inc_hp_svm, pd.DataFrame([hp_dict])], ignore_index=True)
 
-if not os.path.exists("plots_tables/incumbents_table"):
-    os.makedirs("plots_tables/incumbents_table")
+if not os.path.exists(output_path + "/incumbents_tables"):
+    os.makedirs(output_path + "/incumbents_tables")
 
 inc_hp_rf.rename(columns={"imputation_strategy": "Imputer","sampling_strategy": "Sampler", "scaling_strategy": "Scaler", "criterion": "Criterion", "max_depth": "Max depth", "min_samples_split": "Min samples per split", "min_samples_leaf": "Min samples per leaf", "max_features": "Max features", "class_weight": "Class weight"}, inplace=True)
-inc_hp_rf.to_latex("plots_tables/incumbents_table/incumbents_rf.txt", index=False)
+inc_hp_rf.style.hide(axis="index").format(precision=3).to_latex(output_path + "/incumbents_tables/incumbents_rf.txt")
 
 inc_hp_gb.rename(columns={"imputation_strategy": "Imputer","sampling_strategy": "Sampler", "scaling_strategy": "Scaler", "loss": "Loss", "learning_rate": "Learning rate", "criterion": "Criterion", "min_samples_split": "Min samples per split",  "min_samples_leaf": "Min samples per leaf", "max_depth": "Max depth"}, inplace=True)
-inc_hp_gb.to_latex("plots_tables/incumbents_table/incumbents_gb.txt", index=False)
+inc_hp_gb.style.hide(axis="index").format(precision=3).to_latex(output_path + "/incumbents_tables/incumbents_gb.txt")
 
 inc_hp_svm.rename(columns={"imputation_strategy": "Imputer","sampling_strategy": "Sampler", "scaling_strategy": "Scaler", "kernel": "Kernel", "shrinking": "Shrinking", "tol": "Tolerance", "class_weight": "Class weight"}, inplace=True)
-inc_hp_svm.to_latex("plots_tables/incumbents_table/incumbents_svm.txt", index=False)
-
-# %%
-
-display(inc_hp_rf)
-
-# %%
-
-display(inc_hp_gb)
-
-# %%
-
-display(inc_hp_svm)
-
-# %%
-
+inc_hp_svm.style.hide(axis="index").format(precision=3).to_latex(output_path + "/incumbents_tables/incumbents_svm.txt")

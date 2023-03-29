@@ -6,10 +6,12 @@ import os
 
 from sklearn import impute, pipeline, ensemble
 from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.metrics import balanced_accuracy_score
 
 # Import objects and classes from repo
-from configuration import data_ids, scoring
+from configuration import data_ids, scoring, output_path, total_cost, outer_cv_folds
 from data import Dataset
+from utils import McNemar_test, delete_large_file
 from ImbalancedAutoML import ImbalancedAutoML
 
 # This file runs a benchmark of the RandomForestClassifier baseline
@@ -22,20 +24,19 @@ random_forest = pipeline.Pipeline(
     ]
 )
 
-# Set total maximum cost of optimisation in seconds.
-total_cost = 30
-# Set number of CV splits.
-cv_n_splits = 3
+# Set random seed
+np.random.seed(42)
 
 # Initialise 3-fold cross-validation which ensures that share of targets is preserved in each fold.
-cv = StratifiedKFold(n_splits=cv_n_splits, shuffle=True, random_state=42)
+scv = StratifiedKFold(n_splits=outer_cv_folds, shuffle=True, random_state=42)
 
 # Initialise ImbalancedAutoML object with maximum cost of 1200 seconds
-automl = ImbalancedAutoML(total_cost=total_cost/cv_n_splits)
+automl = ImbalancedAutoML(total_cost=total_cost/outer_cv_folds)
 
 # Initialise dicts to store externally cross-validated performance
 baseline_performance_dict = {}
 automl_performance_dict = {}
+mcnemar_dict = {}
 
 for id in data_ids[0:1]:
     dataset = Dataset.from_openml(id)
@@ -45,41 +46,61 @@ for id in data_ids[0:1]:
     X = dataset.features.to_numpy()
     y = dataset.labels.to_numpy()
 
-    # Check performance of baseline with cross-validation
-    scores_random_forest = cross_val_score(random_forest, X, y, scoring=scoring, cv=cv)
-    baseline_performance_dict[id] = np.mean(scores_random_forest)
-    print("Balanced Accuracy of classification random forest: {:.3f}".format(np.mean(scores_random_forest)))
+    scores_baseline = []
+    scores_automl = []
+    time_auto_ml = []
+    mcnemar = []
 
-    # Check performance of AutoML system with cross-validation and track time taken
-    start = time.time()
-    scores_automl = cross_val_score(automl, X, y, scoring=scoring, cv=cv, fit_params={"output_name": str(id), "features_dtypes": dataset.features.dtypes})
-    automl_performance_dict[id] = np.mean(scores_automl)
-    print("Balanced Accuracy of AutoML system: {:.3f}".format(np.mean(scores_automl)))
-    print("Total time taken in seconds: {:.1f}\n".format(time.time()-start))
+    y_test_all = []
+    y_eval_rf_all = []
+    y_eval_automl_all = []
+
+    cv_fold = 1
+    for train, test in scv.split(X, y):
+        X_train, y_train  = X[train], y[train]
+        X_test, y_test  = X[test], y[test]
+
+        # Check performance of baseline on cross-validation fold
+        random_forest.fit(X_train, y_train)
+        y_eval_rf = random_forest.predict(X_test)
+        scores_baseline.append(balanced_accuracy_score(y_test, y_eval_rf))
+
+        # Check performance of AutoML system with cross-validation and track time takes
+        start = time.time()
+        automl.fit(X_train, y_train, output_path = output_path, output_name = str(id), features_dtypes = dataset.features.dtypes, cv_fold=cv_fold)
+        y_eval_automl = automl.predict(X_test)
+        scores_automl.append(balanced_accuracy_score(y_test, y_eval_automl))
+        time_auto_ml.append(time.time() - start)
+
+        mcnemar.append(McNemar_test(y_test, y_eval_rf, y_eval_automl))
+        
+        y_test_all.append(y_test)
+        y_eval_rf_all.append(y_eval_rf)
+        y_eval_automl_all.append(y_eval_automl)
+        
+        cv_fold += 1
+
+    y_test_all = np.concatenate(y_test_all)
+    y_eval_rf_all = np.concatenate(y_eval_rf_all)
+    y_eval_automl_all = np.concatenate(y_eval_automl_all)
+
+    mcnemar.append(McNemar_test(y_test_all, y_eval_rf_all, y_eval_automl_all))
+
+    baseline_performance_dict[id] = scores_baseline + [np.mean(np.array(scores_baseline))]
+    print("CV balanced accuracy of classification random forest: {:.3f}".format(np.mean(np.array(scores_baseline))))
+
+    automl_performance_dict[id] = scores_automl + [np.mean(np.array(scores_automl))]
+    print("CV balanced accuracy of AutoML system: {:.3f}".format(np.mean(np.array(scores_automl))))
+    print("Total time taken for AutoML system: {:.1f}\n".format(np.sum(np.array(time_auto_ml))))
+
+    # Check  McNemar test
+    mcnemar_dict[id] = mcnemar
+    print("Performance of McNemar test:" + str(mcnemar_dict[id]))
 
 # Store dicts of externally cross-validated performance
-pickle.dump(baseline_performance_dict, open("results/run_x/baseline_performance_dict.pkl", 'wb'))
-pickle.dump(automl_performance_dict, open("results/run_x/automl_performance_dict.pkl", 'wb'))
-
-# Renames the results folder after successful benchmark run such that information is not overwritten in the next run 
-for i in range(1,1000):
-    results_path = "results/run_{}".format(i)
-    if not os.path.exists(results_path):
-        os.rename("results/run_x", results_path)
-        break
+pickle.dump(baseline_performance_dict, open(output_path + "/baseline_performance_dict.pkl", 'wb'))
+pickle.dump(automl_performance_dict, open(output_path + "/automl_performance_dict.pkl", 'wb'))
+pickle.dump(mcnemar_dict, open(output_path + "/mcnemar_dict.pkl", 'wb'))
 
 # Delete large files not needed for further analysis
-folders_in_dir = np.array(os.listdir(results_path))
-dataset_folders = np.array(["dataset" in folder_in_dir for folder_in_dir in folders_in_dir])
-dataset_folders = folders_in_dir[dataset_folders]
-
-for dataset_folder in dataset_folders:
-    files_in_folder = np.array(os.listdir(results_path + "/" + dataset_folder))
-    log_files = np.array(["dehb" in file_in_folder for file_in_folder in files_in_folder])
-    log_files = files_in_folder[log_files]
-    history_files = np.array(["history" in file_in_folder for file_in_folder in files_in_folder])
-    history_files = files_in_folder[history_files]
-    for log_file in log_files:
-        os.remove(results_path + "/" + dataset_folder + "/" + log_file)
-    for history_file in history_files:
-        os.remove(results_path + "/" + dataset_folder + "/" + history_file)
+delete_large_file(output_path)

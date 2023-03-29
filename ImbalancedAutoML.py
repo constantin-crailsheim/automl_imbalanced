@@ -71,13 +71,6 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
 
         self.total_cost = total_cost
 
-        # Initialize lists to store objects during optimization
-        self.dehb_objects = []
-        self.trajectories = []
-        self.runtimes = []
-        self.histories = []
-        self.model = []
-
     def create_search_space(self, model_name: str, seed: int = 42):
         """
         Create a search space for DEHB in the logic of ConfigSpace.
@@ -229,6 +222,21 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
         }
         
         return result
+    
+    def make_column_transformer(self, X, features_dtypes):
+        # Generates array of column indices of features that are integers.
+        int_features = []
+        if features_dtypes is not None:
+            for col in range(len(features_dtypes)):
+                if np.issubdtype(features_dtypes[col], np.integer):
+                    int_features += [col]
+
+        # Initialises function that rounds values of features that are integers after imputation and sampling
+        column_transformer = ColumnTransformer(
+                [("round", FunctionTransformer(np.round), int_features),
+                 ("identity", FunctionTransformer(), list(set(range(X.shape[1])) - set(int_features)))])
+    
+        return column_transformer
 
     def make_pipeline(self, config_dict: Dict, model, model_name: str):
         """
@@ -261,7 +269,7 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
                 steps=[
                     ("imputer", imputation_strategy),
                     ("imb_sampler", sampling_strategy),
-                    ("round", self.column_transformer),
+                    ("round",self.column_transformer),
                     ("scaler", scaling_strategy),
                     ("estimator", model(**config_dict)),
                 ]
@@ -279,14 +287,15 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
             save_optim_output: bool = True,
             output_path: str = "results/run_x",
             output_name: Union[str, None] = None,
+            cv_fold: int = None,
             seed: int = 42
             ):
         """
         Fits the AutoML system.
 
         Args:
-            X (_type_, optional): Array of features. Defaults to None.
-            y (_type_, optional): Array of targets. Defaults to None.
+            X (_type_, optional): Array of train features. Defaults to None.
+            y (_type_, optional): Array of train targets. Defaults to None.
             verbose (bool, optional): Whether the DEHB optimizer should be verbose. Defaults to False.
             save_intermediate (bool, optional): Whether intermediate performance results should be saved. Defaults to False.
             save_intermediate (bool, optional): Whether history should be saved. Defaults to False.
@@ -294,35 +303,30 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
             output_path (str, optional): The path to store the results. Defaults to "results".
             output_name (Union[str, None], optional): Name of output, should be set to id of dataset. Defaults to None.
             seed (int, optional): Seed to use for the optimization. Defaults to 42.
-
-        Returns:
-            _type_: self
         """
+
+        # Initialize lists to store objects during optimization
+        self.dehb_objects = []
+        self.trajectories = []
+        self.runtimes = []
+        self.histories = []
+        self.model = []
 
         # Stores the number of classed of the target.
         self.y_classes = np.unique(y)
 
-        # Generates array of column indices of features that are integers.
-        int_features = []
-        if features_dtypes is not None:
-            for col in range(len(features_dtypes)):
-                if np.issubdtype(features_dtypes[col], np.integer):
-                    int_features += [col]
-
-        # Initialises function that rounds values of features that are integers after imputation and sampling
-        self.column_transformer = ColumnTransformer(
-                [("round", FunctionTransformer(np.round), int_features),
-                 ("identity", FunctionTransformer(), list(set(range(X.shape[1])) - set(int_features)))])
+        # Generates function that rounds observations that were integers.
+        self.column_transformer = self.make_column_transformer(X, features_dtypes)
 
         # Makes new directories for each dataset and cross-validation fold in the results folder.
         # This is easier to access for evaluation than adding time stamps
         # Caution: This only work properly if the results folder is empty
-        for i in range(1,4):
-            results_path = output_path + "/dataset_" + output_name + "_cv_" + str(i)
-            if not os.path.exists(results_path):
-                os.makedirs(results_path)
-                break
-        
+        results_path = output_path + "/dataset_" + output_name + "_cv_" + str(cv_fold)
+        if not os.path.exists(results_path):
+            os.makedirs(results_path)
+        else:
+            print("Warning: This output path does already exist, you might overwrite exisiting results.")
+
         # Loop through all three models and tune hyperparameter for each
         for model_name, model in self.model_dict.items():
             
@@ -390,6 +394,30 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
             pickle.dump(self.trajectories, open(results_path + "/trajectories.pkl", 'wb'))
             pickle.dump(self.runtimes, open(results_path + "/runtimes.pkl", 'wb'))
             # pickle.dump(self.model, open(results_path + "/model.pkl", 'wb'))
+
+        return self
+    
+    def fit_with_hp(self, X=None, y=None, hp_dict: Dict= None, features_dtypes=None):
+        """
+        Fits the voting classifier with an ensemble of RandomForestClassifer, GradientBoostingClassifier
+        and SVC with given hyperparameter.
+
+        Args:
+            X (_type_, optional): Array of train features. Defaults to None.
+            y (_type_, optional): Array of train targets. Defaults to None.
+            hp_dict (Dict, optional): Dict of length 3 containing dicts of hyperparameter for each model. Defaults to None.
+            features_dtypes (_type_, optional): Datatypes of all features. Defaults to None.
+        """
+        
+        # add max budget to dictionary
+
+        self.column_transformer = self.make_column_transformer(X, features_dtypes)
+
+        self.model = []
+        for model_name, model in self.model_dict.items():
+            self.model.append((model_name, self.make_pipeline(hp_dict[model_name], model, model_name)))
+        self.voting_classifier = ensemble.VotingClassifier(self.model)
+        self.voting_classifier.fit(X, y)
 
         return self
 
