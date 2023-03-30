@@ -1,0 +1,1 @@
+{"config": {"C": 1.274770253795057, "class_weight": "None", "imputation_strategy": "KNN", "kernel": "rbf", "sampling_strategy": "SMOTETomek", "scaling_strategy": "True", "shrinking": false, "tol": 0.0037442475554871693}, "score": -0.5398084769505298, "info": {"budget": 500.0}}

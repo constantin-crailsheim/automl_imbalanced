@@ -1,0 +1,1 @@
+{"config": {"class_weight": "None", "criterion": "log_loss", "imputation_strategy": "Simple", "max_depth": 21, "max_features": 0.2949597891753757, "min_samples_leaf": 3, "min_samples_split": 3, "sampling_strategy": "SMOTETomek", "scaling_strategy": "True"}, "score": -0.9909839641805547, "info": {"budget": 270.0}}

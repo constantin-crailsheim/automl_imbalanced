@@ -1,0 +1,1 @@
+{"config": {"C": 7.117173224352384, "class_weight": "balanced", "imputation_strategy": "Simple", "kernel": "rbf", "sampling_strategy": "Tomek", "scaling_strategy": "True", "shrinking": true, "tol": 0.0011383769314432398}, "score": -0.9531267025887675, "info": {"budget": 1500.0}}

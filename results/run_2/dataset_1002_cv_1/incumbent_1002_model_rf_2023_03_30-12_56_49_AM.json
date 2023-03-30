@@ -1,0 +1,1 @@
+{"config": {"class_weight": "balanced", "criterion": "entropy", "imputation_strategy": "KNN", "max_depth": 5, "max_features": 0.15176512738246545, "min_samples_leaf": 5, "min_samples_split": 4, "sampling_strategy": "Tomek", "scaling_strategy": "True"}, "score": -0.8055794638121414, "info": {"budget": 90.0}}

@@ -1,0 +1,1 @@
+{"config": {"C": 1.3839951005632642, "class_weight": "balanced", "imputation_strategy": "KNN", "kernel": "sigmoid", "sampling_strategy": "SMOTE", "scaling_strategy": "True", "shrinking": false, "tol": 0.0011929409206340438}, "score": -0.9870254297754506, "info": {"budget": 500.0}}

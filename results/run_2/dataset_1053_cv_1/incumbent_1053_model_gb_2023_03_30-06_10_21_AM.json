@@ -1,0 +1,1 @@
+{"config": {"criterion": "squared_error", "imputation_strategy": "KNN", "learning_rate": 0.014392565267188653, "loss": "exponential", "max_depth": 3, "min_samples_leaf": 1, "min_samples_split": 15, "sampling_strategy": "SMOTETomek", "scaling_strategy": "True"}, "score": -0.6495281034754719, "info": {"budget": 30.0}}
