@@ -5,10 +5,13 @@ scoring = "balanced_accuracy"
 output_path = "results/run_2"
 
 # Set total maximum cost of optimisation in seconds.
-total_cost = 30
+total_cost = 3600
 
 # Set number of CV splits.
 outer_cv_folds = 3
+
+# Set seed.
+seed = 42
 
 # Dict of minimum and maximum of y-axis for trajectory plots. Needs to be adjusted manually by visually checking plots.
 y_min_dict = {976: 0.905, 980: 0.89, 1002: 0.5, 1018: 0.5, 1019: 0.965, 1021: 0.883, 1040: 0.955, 1053: 0.55, 1461: 0.6, 41160: 0.4}

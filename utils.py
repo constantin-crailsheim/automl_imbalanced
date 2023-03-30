@@ -12,10 +12,10 @@ def McNemar_test(labels, prediction_1, prediction_2):
     correct_model1 = labels == prediction_1
     correct_model2 = labels == prediction_2
 
-    A = sum(correct_model1 & correct_model2)
+    # A = sum(correct_model1 & correct_model2)
     B = sum(correct_model1 & ~correct_model2)
     C = sum(~correct_model1 & correct_model2)
-    D = sum(~correct_model1 & ~correct_model2)
+    # D = sum(~correct_model1 & ~correct_model2)
 
     chi2_Mc = ((abs(B - C) - 1) ** 2) / (B + C)
 

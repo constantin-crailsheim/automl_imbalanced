@@ -12,22 +12,22 @@ import json
 
 baseline_performance_dict = pickle.load(open(output_path + "/baseline_performance_dict.pkl", 'rb'))
 automl_performance_dict = pickle.load(open(output_path + "/automl_performance_dict.pkl", 'rb'))
-# mcnemar_dict = pickle.load(open(output_path + "/mcnemar_dict.pkl", 'rb'))
+mcnemar_dict = pickle.load(open(output_path + "/mcnemar_dict.pkl", 'rb'))
 
 performance_df = pd.DataFrame(columns=["Model"] + list(baseline_performance_dict.keys()))
 baseline_performance_dict["Model"] = "Baseline"
 automl_performance_dict["Model"] = "AutoML system"
-# mcnemar_dict["Model"] = "McNemar test"
+mcnemar_dict["Model"] = "McNemar test"
 
-# for id in data_ids[:1]:
-#     baseline_performance_dict[id] = baseline_performance_dict[id][3]
-#     automl_performance_dict[id] = automl_performance_dict[id][3]
-#     mcnemar_dict[id] = mcnemar_dict[id][3]
+for id in data_ids:
+    baseline_performance_dict[id] = baseline_performance_dict[id][3]
+    automl_performance_dict[id] = automl_performance_dict[id][3]
+    mcnemar_dict[id] = mcnemar_dict[id][3]
 
 performance_df = pd.concat([performance_df, pd.DataFrame([baseline_performance_dict])], ignore_index=True)
 performance_df = pd.concat([performance_df, pd.DataFrame([automl_performance_dict])], ignore_index=True)
 performance_df.loc[len(performance_df)] = ["Improvement"] + list(performance_df.iloc[1,1:].to_numpy() - performance_df.iloc[0,1:])
-# performance_df = pd.concat([performance_df, pd.DataFrame([mcnemar_dict])], ignore_index=True)
+performance_df = pd.concat([performance_df, pd.DataFrame([mcnemar_dict])], ignore_index=True)
 
 performance_df.style.hide(axis="index").format(precision=3).to_latex(output_path + "/performance_table.txt") # float_format="{:0.3f}".format
 
@@ -146,4 +146,4 @@ inc_hp_gb.rename(columns={"imputation_strategy": "Imputer","sampling_strategy": 
 inc_hp_gb.style.hide(axis="index").format(precision=3).to_latex(output_path + "/incumbents_tables/incumbents_gb.txt")
 
 inc_hp_svm.rename(columns={"imputation_strategy": "Imputer","sampling_strategy": "Sampler", "scaling_strategy": "Scaler", "kernel": "Kernel", "shrinking": "Shrinking", "tol": "Tolerance", "class_weight": "Class weight"}, inplace=True)
-inc_hp_svm.style.hide(axis="index").format(precision=3).to_latex(output_path + "/incumbents_tables/incumbents_svm.txt")
+inc_hp_svm.style.hide(axis="index").format(subset=["C"], precision=3).format(subset=["Tolerance"], precision=4).to_latex(output_path + "/incumbents_tables/incumbents_svm.txt")

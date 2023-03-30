@@ -1,15 +1,14 @@
-# Import other modules
-import numpy as np
+# Import packages
 import time
 import pickle
-import os
+import numpy as np
 
 from sklearn import impute, pipeline, ensemble
-from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import balanced_accuracy_score
 
 # Import objects and classes from repo
-from configuration import data_ids, scoring, output_path, total_cost, outer_cv_folds
+from configuration import data_ids, scoring, output_path, total_cost, outer_cv_folds, seed
 from data import Dataset
 from utils import McNemar_test, delete_large_file
 from ImbalancedAutoML import ImbalancedAutoML
@@ -20,25 +19,26 @@ from ImbalancedAutoML import ImbalancedAutoML
 random_forest = pipeline.Pipeline(
     steps=[
         ("imputer", impute.SimpleImputer()),
-        ("estimator", ensemble.RandomForestClassifier()),
+        ("estimator", ensemble.RandomForestClassifier(random_state=seed)),
     ]
 )
 
-# Set random seed
-np.random.seed(42)
+# Set global random seed
+np.random.seed(seed)
 
 # Initialise 3-fold cross-validation which ensures that share of targets is preserved in each fold.
-scv = StratifiedKFold(n_splits=outer_cv_folds, shuffle=True, random_state=42)
+scv = StratifiedKFold(n_splits=outer_cv_folds, shuffle=True, random_state=seed)
 
 # Initialise ImbalancedAutoML object with maximum cost of 1200 seconds
-automl = ImbalancedAutoML(total_cost=total_cost/outer_cv_folds)
+automl = ImbalancedAutoML(total_cost=total_cost/outer_cv_folds, random_state=seed)
 
 # Initialise dicts to store externally cross-validated performance
 baseline_performance_dict = {}
 automl_performance_dict = {}
 mcnemar_dict = {}
 
-for id in data_ids[0:1]:
+for id in data_ids:
+
     dataset = Dataset.from_openml(id)
 
     print(f"Comparing random forest baseline with AutoML system on {dataset.name} with ID {id}")
@@ -65,7 +65,7 @@ for id in data_ids[0:1]:
         y_eval_rf = random_forest.predict(X_test)
         scores_baseline.append(balanced_accuracy_score(y_test, y_eval_rf))
 
-        # Check performance of AutoML system with cross-validation and track time takes
+        # Check performance of AutoML system with cross-validation and track time taken
         start = time.time()
         automl.fit(X_train, y_train, output_path = output_path, output_name = str(id), features_dtypes = dataset.features.dtypes, cv_fold=cv_fold)
         y_eval_automl = automl.predict(X_test)
@@ -95,7 +95,7 @@ for id in data_ids[0:1]:
 
     # Check  McNemar test
     mcnemar_dict[id] = mcnemar
-    print("Performance of McNemar test:" + str(mcnemar_dict[id]))
+    print("Test statistic of McNemar test: {:.2f}".format(mcnemar_dict[id][3]))
 
 # Store dicts of externally cross-validated performance
 pickle.dump(baseline_performance_dict, open(output_path + "/baseline_performance_dict.pkl", 'wb'))

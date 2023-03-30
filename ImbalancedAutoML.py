@@ -22,7 +22,6 @@ from ConfigSpace import Configuration, ConfigurationSpace, Categorical, Float, I
 
 from configuration import scoring
 
-
 class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
     def __init__(self,
                  total_cost: Float = 3600,
@@ -59,9 +58,6 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
         self.model_cost_dict = {"rf": total_cost*0.4, "gb": total_cost*0.4, "svm": total_cost*0.2} # Check the best split between costs
       
         self.random_state = random_state
-
-        # Initialise 4-fold cross-validation which ensures that share of targets is preserved in each fold.
-        self.cv = StratifiedKFold(n_splits=4, shuffle=True, random_state=random_state)
 
         # Set min and max budget of the fidelities for each algorithm.
         # For random forest and gradient boosting, the budget is the number of trees.
@@ -207,7 +203,9 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
         warnings.filterwarnings('ignore', 'Solver terminated early.*')
 
         # Cross-validated balanced accuracy of model with current hyperparameter configuration
-        score = np.mean(cross_val_score(model, train_X, train_y, scoring=scoring, cv=self.cv))
+        # Initialise 4-fold cross-validation which ensures that share of targets is preserved in each fold.
+        cv = StratifiedKFold(n_splits=4, shuffle=True, random_state=self.random_state)
+        score = np.mean(cross_val_score(model, train_X, train_y, scoring=scoring, cv=cv))
 
         cost = time.time() - start
 
@@ -250,6 +248,9 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
         Returns:
             _type_: Pipeline of imputer, imbalanced sampler, rounding, scaler and model estimator. 
         """
+
+        # Set random state for all models
+        config_dict["random_state"] = self.random_state
 
         # Takes objects of imputer, sampler and scaler from the list of choices and removes hyperparameter from config_dict.
         imputation_strategy = self.imputation_strategies[config_dict["imputation_strategy"]]
@@ -380,7 +381,7 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
             # Append incumbent model to list used for voting classifier
             self.model.append((model_name, self.make_pipeline(best_config_dict, model, model_name)))
         
-        # Initialize and fit voting classifier in incumbent models
+        # Initialize and fit voting classifier on incumbent models
         self.voting_classifier = ensemble.VotingClassifier(self.model)
         self.voting_classifier.fit(X, y)
 
@@ -388,12 +389,12 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
         for model_number in range(3):
             self.model[model_number][1].steps.pop(1)
 
-        # Save trajectories and runtimes. DEHB object and models can be saved optionally.
+        # Save trajectories, runtimes and voting classifier. DEHB objects can be saved optionally.
         if save_optim_output:
             # pickle.dump(self.dehb_objects, open(results_path + "/dehb_objects.pkl", 'wb'))
             pickle.dump(self.trajectories, open(results_path + "/trajectories.pkl", 'wb'))
             pickle.dump(self.runtimes, open(results_path + "/runtimes.pkl", 'wb'))
-            # pickle.dump(self.model, open(results_path + "/model.pkl", 'wb'))
+            pickle.dump(self.voting_classifier, open(results_path + "/voting_classifier.pkl", 'wb'))
 
         return self
     
