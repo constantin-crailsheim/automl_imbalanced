@@ -123,7 +123,7 @@
 \maketitle
 
 \begin{abstract}
-The AutoML system tunes a ML pipeline of an imputer, an optional sampler, an optional standardizer and a choice of three models. Since the tasks are imbalanced tabular data, a random forest classifier, a gradient boosting classifier and a SVM classifier are reasonable choices, which should yield a good overall prediction by majority voting. I used DEHB as an optimizer, which combines the advantages of differential evolutions and hyperband, i.e., generating promising new hyperparameter configurations for longer training based on initial cheap evaluations. Overall, the improvement in performance compared to the untuned random forest classifier baseline is 0.6\% to 25.3\%. Thus the AutoML system outperforms the baseline across all datasets. The source code is available at: \newline \url{https://github.com/constantin-crailsheim/automl_imbalanced}
+The AutoML system tunes a ML pipeline of an imputer, an optional sampler, an optional standardizer and a choice of three models. Since the tasks are imbalanced tabular data, a random forest classifier, a gradient boosting classifier and a SVM classifier are reasonable choices, which should yield a good overall prediction by majority voting. I used DEHB as an optimizer, which combines the advantages of differential evolutions and hyperband, i.e., generating promising new hyperparameter configurations for longer training based on initial cheap evaluations. Overall, the improvement in performance compared to the untuned random forest classifier baseline is 0.6\% to 25.3\%. Thus the AutoML system outperforms the baseline across all datasets by balanced accuracy and it is significantly different for 9 out of 10 datasets by the McNemar test. The source code is available at: \newline \url{https://github.com/constantin-crailsheim/automl_imbalanced}
 \end{abstract}
 
 % content will be automatically hidden during submission
@@ -133,119 +133,125 @@ The AutoML system tunes a ML pipeline of an imputer, an optional sampler, an opt
 
 \section{Introduction}
 
-The objective of the AutoML system is to yield good performance as measured by the balanced accuracy on imbalanced tabular datasets and be able to deal with missing values. Thus, it optimizes a ML pipeline consisting of five elements. First, a choice of two imputers replaces missing values. Then, an optional sampling method is applied to deal with imbalance in the targets, which consists of both under- and oversampling methods. Next, the pre-processed integer features are rounded such that they do not take values that would not appear in the training data. After optionally normalizing all features, three different models were fitted, i.e., a random forest classifier, a gradient boosting classifier and a SVM classifier. The choice of pre-processing and the hyperparameters of the model were optimized by DEHB, which is a computationally cheap optimizer that works well on discrete search spaces. The final predictions are derived by majority voting of the individual predictions of the best pipelines for each model. This means that the overall predictions should be good of the errors of the model are not too correlated. I used a M1 Pro chip to run the optimization.
+The objective of the AutoML system is to yield good performance as measured by the balanced accuracy on imbalanced tabular datasets and be able to deal with missing values. Thus, it optimizes a ML pipeline consisting of five elements. First, a choice of two imputers replaces missing values. Then, an optional sampling method is applied to deal with imbalance in the targets, which consists of both under- and oversampling methods. Next, the pre-processed integer features are rounded such that they do not take values that would not appear in the training data. After optionally normalizing all features, three different models were fitted, i.e., a random forest classifier, a gradient boosting classifier and a SVM classifier. The choice of pre-processing and the hyperparameters of the model were optimized by DEHB, which is a computationally cheap optimizer that works well on discrete search spaces. The final predictions are derived by majority voting of the individual predictions of the best pipelines for each model. This means that the overall predictions should be good of the errors of the model are not too correlated.
 
 \section{Method}
 
 This section outlines the specific choices of the AutoML system and how it will be optimized and evaluated. The choices of the imputation strategy of sklearn.impute are:
 \begin{itemize}
-\item The \href{https://scikit-learn.org/stable/modules/generated/sklearn.impute.SimpleImputer.html}{SimpleImputer} is an univariate imputer, which completes missing values with a descriptive statistic per feature. I chose the median, since it is less sensitive to outliers than the mean.
-\item The \href{https://scikit-learn.org/stable/modules/generated/sklearn.impute.KNNImputer.html#sklearn.impute.KNNImputer}{KNNImputer} replaces missing values by the mean value of its 5 nearest neighbors as default based on Euclidian distance of their non-missing observations of the same feature. 
+\item The \href{https://scikit-learn.org/stable/modules/generated/sklearn.impute.SimpleImputer.html}{\texttt{SimpleImputer}} is an univariate imputer, which completes missing values with a descriptive statistic per feature. I chose the median, since it is less sensitive to outliers than the mean.
+\item The \href{https://scikit-learn.org/stable/modules/generated/sklearn.impute.KNNImputer.html#sklearn.impute.KNNImputer}{\texttt{KNNImputer}} replaces missing values by the mean value of its 5 nearest neighbors as default based on Euclidian distance of their non-missing observations of the same feature. 
 \end{itemize}
 
-The choices of data-level sampling method to yield balanced dataset of imblearn are:
+The choices of data-level sampling method to yield balanced dataset of \texttt{imblearn} are:
 \begin{itemize}
-\item \href{https://imbalanced-learn.org/stable/references/generated/imblearn.over_sampling.SMOTE.html}{SMOTE} as an oversampling approach generates new samples of the minority class by interpolating between existing observations of the minority class, where no distinction is made between easy and hard samples. 
-\item \href{https://imbalanced-learn.org/stable/references/generated/imblearn.under_sampling.TomekLinks.html}{TomekLinks} as an undersampling approach removes samples from the majority class, if they are nearest neighbors to a minority class sample, thus removing noisy borderline samples of the majority class. 
-\item \href{https://imbalanced-learn.org/stable/references/generated/imblearn.combine.SMOTETomek.html}{SMOTETomek}, which combines SMOTE and Tomek links.
+\item \href{https://imbalanced-learn.org/stable/references/generated/imblearn.over_sampling.SMOTE.html}{\texttt{SMOTE}} as an oversampling approach generates new samples of the minority class by interpolating between existing observations of the minority class, where no distinction is made between easy and hard samples. 
+\item \href{https://imbalanced-learn.org/stable/references/generated/imblearn.under_sampling.TomekLinks.html}{\texttt{TomekLinks}} as an undersampling approach removes samples from the majority class, if they are nearest neighbors to a minority class sample, thus removing noisy borderline samples of the majority class. 
+\item \href{https://imbalanced-learn.org/stable/references/generated/imblearn.combine.SMOTETomek.html}{\texttt{SMOTETomek}}, which combines SMOTE and Tomek links.
 \item No sampling method, which would allow algorithmic-level methods to deal with the imbalanced data. 
 \end{itemize}
 
 The above pre-processing methods could generate numeric values for features that should contain only integers (e.g., ordinal categorical features), since they impute missing values by means or medians and generate new samples by interpolation. Thus, another layer is added to the pipeline, which rounds all observations of those features to an integer. \\
 
-The last step of pre-processing is  the choice of whether to apply the \href{https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html}{StandardScaler} of sklearn.preprocessing to standardize the features. This will be in particular useful for the SVM, since an RBF kernel assumes features centered around zero and similar variance across features. \\
+The last step of pre-processing is  the choice of whether to apply the \href{https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html}{\texttt{StandardScaler}} of \texttt{sklearn.preprocessing} to standardize the features. This will be in particular useful for the SVM, since an RBF kernel assumes features centered around zero and similar variance across features. \\
 
-Subsequently, the hyperparameters of the three models of the ensemble were optimized, where the search space was defined with the \href{https://automl.github.io/ConfigSpace/main/}{ConfigSpace} package. For almost all hyperparameters, the default was set to the default specified for each model. The search space was mostly chosen such that it is centered around the default while accounting for log scale. In those cases where the default would be a the lower end of a reasonable search space, the upper bound was chosen higher. \\
+Subsequently, the hyperparameters of the three models of the ensemble were optimized, where the search space was defined with the \href{https://automl.github.io/ConfigSpace/main/}{\texttt{ConfigSpace}} package. For almost all hyperparameters, the default was set to the default specified for each model. The search space was mostly chosen such that it is centered around the default while accounting for log scale. In those cases where the default would be a the lower end of a reasonable search space, the upper bound was chosen higher. \\
 
-The first model in the ensemble is a \href{https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html}{RandomForestClassifier} from sklearn.ensemble. It can handle all data types well and generalizes well by having a low variance due to ensembling over relatively uncorrelated models. The hyperparameters, which will all be sampled uniformly, are:
+The first model in the ensemble is a \href{https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html}{\texttt{RandomForestClassifier}} from \texttt{sklearn.ensemble}. It can handle all data types well and generalizes well by having a low variance due to ensembling over relatively uncorrelated models. The hyperparameters, which will all be sampled uniformly, are:
 
 \vspace{-0.3cm}
 \begin{table}[H]
+\centering
 \begin{tabular}{ | c | c | c | c | c | c | }
  \hline
   Hyperparameter & Data type & Search space & Default & Other \\
  \hline
- criterion & Categorical & \{Gini, Entropy, Log loss\} & Gini &   \\ 
- max\_depth  & Integer & [5,15] & 10 &  \\ 
- min\_samples\_split & Integer & [1, 32] & 2 & Log scale \\ 
- min\_samples\_leaf & Integer & [1, 16] & 1 & Log scale  \\ 
- max\_features & Integer & [0.1, 0.9] & 0.5 &   \\  
- class\_weight & Categorical & \{Balanced, Balanced subsample, None\}  & None &  \\ 
+ \texttt{criterion} & Categorical & \{\texttt{gini}, \texttt{entropy}, \texttt{log\_loss}\} & \texttt{gini} &   \\ 
+ \texttt{max\_depth}  & Integer & [5,15] & 10 &  \\ 
+ \texttt{min\_samples\_split} & Integer & [1, 32] & 2 & Log scale \\ 
+ \texttt{min\_samples\_leaf} & Integer & [1, 16] & 1 & Log scale  \\ 
+ \texttt{max\_features} & Integer & [0.1, 0.9] & 0.5 &   \\  
+ \texttt{class\_weight} & Categorical & \{\texttt{balanced}, \texttt{balanced\_subsample}, \texttt{None}\}  & \texttt{None} &  \\ 
  \hline
 \end{tabular}
 \end{table}
 \vspace{-0.3cm}
 
-The class\_weight is an algorithm-level method that deals with imbalanced data and will only have an effect if no data-level sampling method was used, since in that case the dataset passed to the model will be balanced. \\
+The \texttt{class\_weight} is an algorithm-level method that deals with imbalanced data and will only have an effect if no data-level sampling method was used, since in that case the dataset passed to the model will be balanced. \\
 
-The second model in the stack is a \href{https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html}{GradientBoostingClassifier} from sklearn.ensemble. It has strong predictive performance by iteratively fitting weak learners on the error of the previous learner and has similar advantages as the RandomForestClassifier. The hyperparameters are:
+The second model in the stack is a \href{https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html}{\texttt{GradientBoostingClassifier}} from \texttt{sklearn.ensemble}. It has strong predictive performance by iteratively fitting weak learners on the error of the previous learner and has similar advantages as the \texttt{RandomForestClassifier}. The hyperparameters are:
 
 \vspace{-0.3cm}
 \begin{table}[H]
+\centering
 \begin{tabular}{ | c | c | c | c | c | c | }
  \hline
   Hyperparameter & Data type & Search space & Default & Other \\
  \hline
- loss & Categorical & \{Log loss, Exponential\} & Log loss &  \\ 
- learning\_rate & Float & [0.01, 1] & 0.1 & Log scale  \\ 
- criterion & Categorical & \{Friedman MSE, Squared error\} & Friedman MSE &   \\ 
- min\_samples\_split & Integer & [1, 32] & 2 & Log scale \\ 
- min\_samples\_leaf & Integer & [1, 16] & 1 & Log scale  \\
- max\_depth  & Integer & [2,10] & 3 &  \\ 
+ \texttt{loss} & Categorical & \{\texttt{log\_loss}, \texttt{exponential}\} & \texttt{log\_loss} &  \\ 
+ \texttt{learning\_rate} & Float & [0.01, 1] & 0.1 & Log scale  \\ 
+ \texttt{criterion} & Categorical & \{\texttt{friedman\_mse}, \texttt{squared\_error}\} & \texttt{friedman\_mse} &   \\ 
+ \texttt{min\_samples\_split} & Integer & [1, 32] & 2 & Log scale \\ 
+ \texttt{min\_samples\_leaf} & Integer & [1, 16] & 1 & Log scale  \\
+ \texttt{max\_depth}  & Integer & [2,10] & 3 &  \\ 
  \hline
 \end{tabular}
 \end{table}
 \vspace{-0.3cm}
 
-The third model in the stack is a Support Vector Classifier (\href{https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html#sklearn.svm.SVC}{SVC}) from sklearn.svm. This model works in particular well on easily to separate datasets and in high-dimensional spaces \footnote{https://dhirajkumarblog.medium.com/top-4-advantages-and-disadvantages-of-support-vector-machine-or-svm-a3c06a2b107, Accessed on 26/03/2023}. The hyperparameters are:
+The third model in the stack is a Support Vector Classifier (\href{https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html#sklearn.svm.SVC}{\texttt{SVC}}) from \texttt{sklearn.svm}. This model works in particular well on easily to separate datasets, on small datasets and in high-dimensional spaces \citep{GfG}. The hyperparameters are:
 
 \vspace{-0.3cm}
 \begin{table}[H]
+\centering
 \begin{tabular}{ | c | c | c | c | c | c | }
  \hline
   Hyperparameter & Data type & Search space & Default & Other \\
  \hline
- C & Float & [0.1, 10]  & 1.0 & Log scale \\ 
- kernel & Categorical & \{Linear, Polynomial, RBF, Sigmoid\}  & RBF &   \\ 
- shrinking & Boolean & \{True, False\} & True &  \\ 
- tol & Float & [1e-4,1e-2] & 1e-3 &  \\ 
- class\_weight & Categorical & \{Balanced, None\}  & None &  \\ 
+ \texttt{C} & Float & [0.1, 10]  & 1.0 & Log scale \\ 
+ \texttt{kerne}l & Categorical & \{\texttt{linear}, \texttt{poly}, \texttt{rbf}, \texttt{sigmoid}\}  & \texttt{rbf} &   \\ 
+ \texttt{shrinking} & Boolean & \{\texttt{True}, \texttt{False}\} & True &  \\ 
+ \texttt{to}l & Float & [1e-4,1e-2] & 1e-3 &  \\ 
+ \texttt{class\_weight} & Categorical & \{\texttt{balanced}, \texttt{None}\}  & \texttt{None} &  \\ 
  \hline
 \end{tabular}
 \end{table}
+\vspace{-0.3cm}
 
-To optimize the hyperparameter of the AutoML system, I used \href{https://github.com/automl/dehb}{DEHB} by \citet{dehb}, which combines differential evolution and hyperband. Differential evolution constructs a new mutant vector from three random parents and then generates the offspring by randomly selecting values from the new mutant vector with probability $p$ and otherwise from one of the corresponding parents. Hyperband allows to search the whole search space with cheap evaluations and only trains more costly models on promising areas of the search space. The algorithm starts by sampling $N$ random hyperparameter configurations, which are evaluated at the lowest budget. Then the best $1/\eta$ of these configurations are evaluated at a $\eta$-times higher budget and this process is repeated until the highest fidelity (denoted here by $f$) is reached, thus $N=\eta^{f-1}$. After completing one iteration, the algorithm restarts with new instantiations and evaluates these at the second lowest fidelity, thereby hedging against bad initializations. DEHB combines both approaches by generating the hyperparameter configurations for the next fidelity by differential evolution from the lower fidelity as parent pool. The authors state that DEHB is computationally cheap with high speed-up gains compared to BOHB. Furthermore, it has strong final performance for discrete search spaces, which I have for various hyperparameters. The authors experiments have shown that DEHB also outperforms SMAC by mean ranks across all chosen benchmarks. For those reasons, I chose DEHB as an efficient optimizer for this problem. \\
+To optimize the hyperparameter of the AutoML system, I used \href{https://github.com/automl/dehb}{\texttt{DEHB}} by \citet{dehb}, which combines differential evolution and hyperband. Differential evolution constructs a new mutant vector from three random parents and then generates the offspring by randomly selecting values from the new mutant vector with probability $p$ and otherwise from one of the corresponding parents. Hyperband allows to search the whole search space with cheap evaluations and only trains more costly models on promising areas of the search space. The algorithm starts by sampling $N$ random hyperparameter configurations, which are evaluated at the lowest budget. Then the best $1/\eta$ of these configurations are evaluated at a $\eta$-times higher budget and this process is repeated until the highest fidelity (denoted here by $f$) is reached, thus $N=\eta^{f-1}$. After completing one iteration, the algorithm restarts with new instantiations and evaluates these at the second lowest fidelity, thereby hedging against bad initializations. \texttt{DEHB} combines both approaches by generating the hyperparameter configurations for the next fidelity by differential evolution from the lower fidelity as parent pool. The authors state that \texttt{DEHB} is computationally cheap with high speed-up gains compared to \texttt{BOHB}. Furthermore, it has strong final performance for discrete search spaces, which I have for various hyperparameters. The authors experiments have shown that \texttt{DEHB} also outperforms \texttt{SMAC} by mean ranks across all chosen benchmarks. For those reasons, I chose DEHB as an efficient optimizer for this problem. \\
 
-For the optimization, I set $\eta=3$ and $f=4$, which implies an initial population of $N=3^{3}=27$. I set the budget for the RandomForestClassifier and the GradientBoostingClassifier, as indicated by the number of trees in the forest, to a minimum of 10 and maximum of 270. For SVC, the budget is indicated by the maximum number of iterations and I set it to a minimum of 500 and maximum of 13500. However, the runtime between the lowest and largest budget did not differ too much since the SVM optimizer most likely already converged in most cases and the evaluation was relatively cheap compared to the forest based classifiers for most datasets. Thus, the SVC mostly benefits from differential evolution and the successive halving element is not as important since many configurations can be tested irrespecitively. Hence, I allocated 40\% of the maximum cost to optimizing the forest based models and 20\% to optimizing the SVC. \\
+For the optimization, I set $\eta=3$ and $f=4$, which implies an initial population of $N=3^{3}=27$. I set the budget for the \texttt{RandomForestClassifier} and the \texttt{GradientBoostingClassifier}, as indicated by the number of trees in the forest, to a minimum of 10 and maximum of 270. For \texttt{SVC}, the budget is indicated by the maximum number of iterations and I set it to a minimum of 500 and maximum of 13500. However, the runtime between the lowest and largest budget did not differ too much since the SVM optimizer most likely already converged in most cases and the evaluation was relatively cheap compared to the forest based classifiers for most datasets. Thus, the \texttt{SVC} mostly benefits from differential evolution and the successive halving element is not as important since many configurations can be tested irrespecitively. Hence, I allocated 40\% of the maximum cost to optimizing the forest based models and 20\% to optimizing the \texttt{SVC}. \\
 
-To evaluate the performance of the AutoML system, I used 3-fold external and 4-fold internal cross-validation. Given a total budget of 3600 seconds per dataset, a total of 1200 second could be used to optimize the AutoML system in each fold. Since the budget is not that larger after accounting for cross-validation, I tuned only a selection of hyperparameters of the actual model and the hyperparameters of the preprocessing functions were kept at their default values. \\
+To evaluate the performance of the AutoML system, I used 3-fold external and 4-fold internal cross-validation. I used stratified CV to ensure that the class imbalance of the targets is preserved in each fold. Given a total budget of 3600 seconds per dataset, a total of 1200 second could be used to optimize the AutoML system in each fold. Since the budget is not that larger after accounting for cross-validation, I tuned only a selection of hyperparameters of the actual model and the hyperparameters of the preprocessing functions were kept at their default values. \\
 
-After the optimization routine, each model is fitted with incumbent configuration and the unbalanced sampling is removed from the pipeline to not sample from the test set. The final AutoML system is an ensemble of three models with majority voting for the final classification. 
+After the optimization routine, all three models are passed to the \href{https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.VotingClassifier.html}{\texttt{VotingClassifier}} and fitted with their incumbent configurations. Then the imbalance sampling is removed from the pipeline to not sample from the test set. Thus, the final AutoML system is an ensemble of three models with majority voting for the final classification. 
 
 \section{Experiments}
 
-The external cross-validation performance in terms of balanced accuracy of the AutoML system vs. the untuned random forest baseline for each dataset id is shown below:
+I used a M1 Pro chip with 32 GB from 2021 to run the optimization. The external cross-validation performance in terms of balanced accuracy of the AutoML system vs. the untuned \texttt{RandomForestClassifer} baseline for each dataset id is shown below:
 
+\vspace{-0.2cm}
 \begin{table}[H]
+\centering
 \begin{tabular}{lrrrrrrrrrr}
 \toprule
-        Model &   976 &   980 &  1002 &  1018 &  1019 &  1021 &  1040 &  1053 &  1461 &  41160 \\
+Model &   976 &   980 &  1002 &  1018 &  1019 &  1021 &  1040 &  1053 &  1461 &  41160 \\
 \midrule
-     Baseline & 0.965 & 0.936 & 0.543 & 0.546 & 0.990 & 0.918 & 0.963 & 0.592 & 0.695 &  0.571 \\
-AutoML system & 0.989 & 0.982 & 0.788 & 0.799 & 0.996 & 0.957 & 0.992 & 0.661 & 0.784 &  0.667 \\
+Baseline & 0.962 & 0.939 & 0.547 & 0.554 & 0.989 & 0.932 & 0.960 & 0.594 & 0.695 & 0.571 \\
+AutoML system & 0.990 & 0.982 & 0.806 & 0.809 & 0.997 & 0.957 & 0.992 & 0.657 & 0.838 & 0.743 \\
 \midrule
-  Improvement & 0.023 & 0.046 & 0.245 & 0.253 & 0.006 & 0.038 & 0.029 & 0.069 & 0.089 &  0.095 \\
+Improvement & 0.027 & 0.043 & 0.259 & 0.254 & 0.008 & 0.025 & 0.032 & 0.063 & 0.143 & 0.172 \\
+McNemar test & 37.19 & 30.94 & 927.63 & 906.28 & 8.75 & 11.40 & 1.86 & 287.88 & 660.02 & 117.14 \\
 \bottomrule
 \end{tabular}
 \end{table}
+\vspace{-0.2cm}
 
-Hence, the AutoML system outperforms the baseline across all datasets with an improvement between 0.6\% and 25.3\%. Include test? \\
+Hence, the AutoML system outperforms the baseline across all datasets with an improvement between 0.6\% and 25.3\%. To evaluate whether the two algorithms are significantly different, I used the McNemar test, which was computed over the concatenated predictions of all folds. The reference distribution is $\chi_{1}^{2}$ and thus the algorithms would be significantly different at the 5\%-level if the test statistic is larger than 3.84, which is the case for all datasets except for dataset 1040. However, for this dataset the balanced accuracy is still 3.2\% better and above 99\%. \\
 
-The plots of the trajectories for each dataset are in appendix A. For dataset 976, 980 1019, the SVC is the top performing estimator, followed by the GradientBoostingClassifier and the RandomForestClassifier. For the other datasets, the ranking is not as clear. For the last two datasets, the SVC has the worst performance, most likely since SVCs are costlier to fit given the large number of observations and less iterations to tune the hyperparameters were possible. This probably also compromise the overall performance of the AutoML system. The benchmarks are usually outperformed after at most 80 seconds, except for the last two datasets due to the underperforming SVC. The final externally cross-validated performance tends to be a bit lower than the performances of the individual algorithms. This probably arises, since the performance of the individual algorithms is overly optimistic due to the hyperparameters being tuned on that specific fold. \\
+The plots of the trajectories for each dataset are in appendix A. For dataset 976, 980 1019, the \texttt{SVC} is the top performing estimator, followed by the \texttt{GradientBoostingClassifier} and the \texttt{RandomForestClassifier}. For the other datasets, the ranking is not as clear. For the last two datasets, the \texttt{SVC} has the worst performance, most likely since SVMs are costlier to fit given the large number of observations and less iterations to tune the hyperparameters were possible. However, the overall performance of the AutoML system is still similar to the best individual models due to majority voting. The benchmarks are usually outperformed after at most 50 seconds, except for the last two datasets due to the underperforming \texttt{SVC}. The final externally cross-validated performance is a bit lower than the performances of the individual algorithms for a few datasets, since the performance of the individual algorithms tends to be overly optimistic due to the hyperparameters being tuned on that specific fold. \\
 
-Write sth about final performance. \\
-
-The chosen incumbents for each model for all datasets are shown in the appendix. The key trends are as following: The preferred sampling method for RandomForestClassifier and SVC is quite mixed, but for the GradientBoostingClassifier only oversampling or mixed methods were considered better. As expected, SVC uses the StandardScaler for all datasets except 1019 (Why?). If no sampling method was chosen, the imbalanced was always accounted for by class weights. \\
+The chosen incumbents for each model for all datasets are shown in the appendix. The key trends are as following: The preferred sampling method for \texttt{RandomForestClassifier} and \texttt{SVC} is quite mixed, but for the \texttt{GradientBoostingClassifier} only oversampling or mixed methods were considered better. As expected, \texttt{SVC} uses the \texttt{StandardScaler} for all datasets except 1019. If no sampling method was chosen, the imbalance was always accounted for by class weights. Lastly, the \texttt{RandomForestClassifier} prefers deeper trees than the \texttt{GradientBoostingClassifier}. \\
 
 \section{Conclusion}
 
@@ -262,7 +268,7 @@ The AutoML system outperforms the benchmark across all datasets and has thus has
 
 \section{Trajectories}
 
-The following plots show the trajectories of the incumbent performance for all three models evaluated with internal cross-validation in each fold over runtime. Furthermore, the external cross-validation of the untuned random forest classifier baseline is plotted as grey horizontal line and the external cross-validation of final performance of the AutoML system is plotted as purple dot at the maximum runtime per model in each fold.
+The following plots show the trajectories of the incumbent performance for all three models evaluated with internal cross-validation in each fold over runtime. Furthermore, the external cross-validation of the untuned random forest classifier baseline is plotted as grey horizontal line and the external cross-validation of the final performance of the AutoML system is plotted as purple dot at the maximum runtime per model in each fold.
 
 \begin{figure}[H]
  \centering
@@ -330,51 +336,51 @@ The following tables shows the incumbent hyperparameter configurations for each 
 
 \begin{sidewaystable}
 \footnotesize
-\caption{Incumbent hyperparameter configurations for the random forest classifier}
+\caption{Incumbent hyperparameters configurations for the random forest classifier}
 \center
 \begin{tabularx}{22cm}{lllllllXXXX}
 \toprule
-Dataset ID & CV fold & Imputer &    Sampler & Scaler & Criterion & Max depth & Min samples \newline per split & Min samples \newline per leaf &  Max features &       Class weight \\
+Dataset ID & CV fold & Imputer & Sampler & Scaler & Criterion & Max depth & Min samples per split & Min samples per leaf & Max features & Class weight \\
 \midrule
-       976 &       1 &  Simple & SMOTETomek &  False &   entropy &        22 &                     4 &                    1 &      0.656466 &               None \\
-       976 &       2 &  Simple & SMOTETomek &   True &  log\_loss &        17 &                     4 &                    1 &      0.115289 & balanced\_subsample \\
-       976 &       3 &  Simple &      SMOTE &  False &   entropy &        16 &                     4 &                    2 &      0.262840 &           balanced \\
+976 & 1 & Simple & SMOTETomek & True & entropy & 19 & 6 & 1 & 0.527 & balanced\_subsample \\
+976 & 2 & Simple & SMOTETomek & True & log\_loss & 25 & 1 & 1 & 0.419 & balanced\_subsample \\
+976 & 3 & Simple & SMOTE & False & entropy & 18 & 4 & 2 & 0.676 & balanced \\
 \midrule
-       980 &       1 &  Simple & SMOTETomek &  False &   entropy &        16 &                     2 &                    2 &      0.457415 &               None \\
-       980 &       2 &     KNN & SMOTETomek &   True &   entropy &        19 &                     2 &                    9 &      0.282039 &           balanced \\
-       980 &       3 &  Simple & SMOTETomek &   True &  log\_loss &        11 &                     1 &                    6 &      0.144065 &               None \\
+980 & 1 & KNN & SMOTE & False & entropy & 22 & 4 & 8 & 0.190 & balanced\_subsample \\
+980 & 2 & Simple & SMOTE & True & entropy & 7 & 9 & 8 & 0.202 & balanced\_subsample \\
+980 & 3 & Simple & SMOTE & True & entropy & 7 & 2 & 3 & 0.357 & balanced \\
 \midrule
-      1002 &       1 &     KNN &      Tomek &  False &   entropy &         5 &                     8 &                    2 &      0.228523 & balanced\_subsample \\
-      1002 &       2 &  Simple &       None &  False &  log\_loss &         5 &                     5 &                    9 &      0.392731 & balanced\_subsample \\
-      1002 &       3 &  Simple &      Tomek &   True &      gini &         6 &                    11 &                    4 &      0.192183 &           balanced \\
+1002 & 1 & KNN & Tomek & True & entropy & 5 & 4 & 5 & 0.152 & balanced \\
+1002 & 2 & KNN & SMOTE & True & entropy & 6 & 13 & 1 & 0.106 & None \\
+1002 & 3 & Simple & None & True & entropy & 5 & 8 & 6 & 0.262 & balanced \\
 \midrule
-      1018 &       1 &     KNN &      Tomek &  False &   entropy &         6 &                     1 &                   14 &      0.105286 &           balanced \\
-      1018 &       2 &     KNN &      Tomek &  False &  log\_loss &         5 &                    25 &                    3 &      0.497648 & balanced\_subsample \\
-      1018 &       3 &     KNN &      Tomek &   True &      gini &         5 &                     9 &                    6 &      0.285309 &           balanced \\
+1018 & 1 & KNN & Tomek & False & gini & 5 & 10 & 1 & 0.188 & balanced\_subsample \\
+1018 & 2 & KNN & None & False & entropy & 6 & 24 & 4 & 0.116 & balanced \\
+1018 & 3 & Simple & Tomek & True & entropy & 5 & 2 & 9 & 0.127 & balanced\_subsample \\
 \midrule
-      1019 &       1 &  Simple & SMOTETomek &   True &   entropy &        23 &                     2 &                    1 &      0.806836 & balanced\_subsample \\
-      1019 &       2 &     KNN & SMOTETomek &  False &   entropy &        19 &                     3 &                    1 &      0.195487 &               None \\
-      1019 &       3 &  Simple &      SMOTE &   True &  log\_loss &        24 &                     1 &                    5 &      0.726165 &               None \\
+1019 & 1 & KNN & SMOTETomek & True & entropy & 17 & 4 & 2 & 0.664 & balanced\_subsample \\
+1019 & 2 & Simple & SMOTETomek & True & log\_loss & 21 & 3 & 3 & 0.295 & None \\
+1019 & 3 & Simple & SMOTETomek & False & entropy & 20 & 3 & 6 & 0.464 & balanced \\
 \midrule
-      1021 &       1 &     KNN &      SMOTE &  False &      gini &        20 &                    19 &                    4 &      0.134323 & balanced\_subsample \\
-      1021 &       2 &  Simple &      SMOTE &  False &   entropy &        22 &                     9 &                    9 &      0.495168 &           balanced \\
-      1021 &       3 &  Simple & SMOTETomek &   True &   entropy &        24 &                    14 &                    3 &      0.208502 &               None \\
+1021 & 1 & KNN & SMOTETomek & True & gini & 13 & 2 & 7 & 0.203 & balanced \\
+1021 & 2 & Simple & SMOTETomek & False & gini & 9 & 4 & 5 & 0.416 & balanced \\
+1021 & 3 & KNN & SMOTE & False & entropy & 14 & 4 & 9 & 0.568 & balanced \\
 \midrule
-      1040 &       1 &  Simple & SMOTETomek &  False &      gini &         8 &                    11 &                    4 &      0.577811 & balanced\_subsample \\
-      1040 &       2 &  Simple & SMOTETomek &  False &      gini &        23 &                     2 &                    5 &      0.797167 &               None \\
-      1040 &       3 &     KNN &      Tomek &  False &      gini &         5 &                     1 &                    1 &      0.390420 &           balanced \\
+1040 & 1 & KNN & Tomek & True & log\_loss & 12 & 1 & 15 & 0.513 & balanced \\
+1040 & 2 & KNN & SMOTE & True & log\_loss & 6 & 32 & 3 & 0.285 & balanced\_subsample \\
+1040 & 3 & Simple & None & True & log\_loss & 17 & 1 & 5 & 0.365 & balanced\_subsample \\
 \midrule
-      1053 &       1 &     KNN & SMOTETomek &  False &  log\_loss &         9 &                     2 &                    4 &      0.393722 & balanced\_subsample \\
-      1053 &       2 &     KNN &      Tomek &   True &  log\_loss &         7 &                     9 &                    4 &      0.791928 &           balanced \\
-      1053 &       3 &  Simple &      Tomek &   True &   entropy &        18 &                     4 &                   12 &      0.656912 & balanced\_subsample \\
+1053 & 1 & KNN & Tomek & False & log\_loss & 8 & 10 & 16 & 0.590 & balanced\_subsample \\
+1053 & 2 & Simple & Tomek & True & gini & 12 & 24 & 4 & 0.400 & balanced \\
+1053 & 3 & KNN & Tomek & False & entropy & 25 & 9 & 14 & 0.555 & balanced \\
 \midrule
-      1461 &       1 &     KNN &      Tomek &  False &  log\_loss &        20 &                     1 &                   11 &      0.158737 & balanced\_subsample \\
-      1461 &       2 &     KNN & SMOTETomek &   True &   entropy &        11 &                    21 &                    4 &      0.517657 &           balanced \\
-      1461 &       3 &     KNN &      Tomek &  False &   entropy &        14 &                    31 &                    2 &      0.221436 &           balanced \\
+1461 & 1 & Simple & None & False & entropy & 11 & 5 & 16 & 0.628 & balanced \\
+1461 & 2 & Simple & None & False & gini & 9 & 10 & 1 & 0.390 & balanced \\
+1461 & 3 & KNN & Tomek & False & entropy & 15 & 8 & 15 & 0.765 & balanced\_subsample \\
 \midrule
-     41160 &       1 &  Simple &       None &  False &   entropy &        18 &                     4 &                    6 &      0.769477 &           balanced \\
-     41160 &       2 &  Simple &      Tomek &   True &   entropy &        10 &                    28 &                    3 &      0.783361 &           balanced \\
-     41160 &       3 &  Simple &      Tomek &   True &      gini &        12 &                     3 &                    4 &      0.808427 &           balanced \\
+41160 & 1 & Simple & Tomek & False & log\_loss & 12 & 28 & 11 & 0.811 & balanced \\
+41160 & 2 & Simple & Tomek & False & gini & 10 & 3 & 5 & 0.379 & balanced \\
+41160 & 3 & KNN & None & True & gini & 12 & 5 & 9 & 0.851 & balanced \\
 \bottomrule
 \end{tabularx}
 \end{sidewaystable}
@@ -382,102 +388,102 @@ Dataset ID & CV fold & Imputer &    Sampler & Scaler & Criterion & Max depth & M
 
 \begin{sidewaystable}
 \footnotesize
-\caption{Incumbent hyperparameter configurations for the gradient boosting classifier}
+\caption{Incumbent hyperparameters configurations for the gradient boosting classifier}
 \center
 \begin{tabular}{lllllllllll}
 \toprule
-Dataset ID & CV fold & Imputer &    Sampler & Scaler &        Loss &  Learning rate &     Criterion & Min samples per split & Min samples per leaf & Max depth \\
+Dataset ID & CV fold & Imputer & Sampler & Scaler & Loss & Learning rate & Criterion & Min samples per split & Min samples per leaf & Max depth \\
 \midrule
-       976 &       1 &  Simple &      SMOTE &   True & exponential &       0.814630 &  friedman\_mse &                     3 &                    2 &         8 \\
-       976 &       2 &  Simple & SMOTETomek &   True & exponential &       0.979669 &  friedman\_mse &                     6 &                    8 &        10 \\
-       976 &       3 &     KNN & SMOTETomek &  False & exponential &       0.948759 &  friedman\_mse &                     4 &                   11 &         8 \\
+976 & 1 & Simple & SMOTE & False & exponential & 0.603 & squared\_error & 2 & 7 & 6 \\
+976 & 2 & Simple & SMOTETomek & True & log\_loss & 0.522 & squared\_error & 23 & 3 & 5 \\
+976 & 3 & Simple & SMOTETomek & True & exponential & 0.815 & squared\_error & 5 & 3 & 3 \\
 \midrule
-       980 &       1 &  Simple &      SMOTE &   True &    log\_loss &       0.360042 &  friedman\_mse &                     4 &                    9 &         4 \\
-       980 &       2 &     KNN & SMOTETomek &   True & exponential &       0.359648 & squared\_error &                    10 &                    1 &         4 \\
-       980 &       3 &     KNN & SMOTETomek &   True & exponential &       0.366579 & squared\_error &                    24 &                   12 &         4 \\
+980 & 1 & Simple & SMOTE & True & log\_loss & 0.598 & squared\_error & 7 & 4 & 4 \\
+980 & 2 & KNN & SMOTETomek & True & log\_loss & 0.432 & friedman\_mse & 9 & 7 & 3 \\
+980 & 3 & Simple & SMOTETomek & True & exponential & 0.322 & squared\_error & 6 & 1 & 5 \\
 \midrule
-      1002 &       1 &     KNN & SMOTETomek &   True & exponential &       0.023344 &  friedman\_mse &                     5 &                    1 &         3 \\
-      1002 &       2 &     KNN &      SMOTE &   True &    log\_loss &       0.016664 &  friedman\_mse &                     2 &                    5 &         2 \\
-      1002 &       3 &  Simple & SMOTETomek &   True &    log\_loss &       0.026060 &  friedman\_mse &                     4 &                    3 &         3 \\
+1002 & 1 & KNN & SMOTETomek & True & log\_loss & 0.010 & squared\_error & 3 & 7 & 2 \\
+1002 & 2 & KNN & SMOTETomek & False & log\_loss & 0.013 & squared\_error & 7 & 6 & 2 \\
+1002 & 3 & KNN & SMOTE & True & exponential & 0.021 & friedman\_mse & 12 & 7 & 4 \\
 \midrule
-      1018 &       1 &  Simple &      SMOTE &   True & exponential &       0.039226 &  friedman\_mse &                     9 &                   13 &         2 \\
-      1018 &       2 &  Simple & SMOTETomek &  False & exponential &       0.027759 & squared\_error &                    21 &                    1 &         4 \\
-      1018 &       3 &     KNN &      SMOTE &  False &    log\_loss &       0.065935 &  friedman\_mse &                    13 &                    6 &         3 \\
+1018 & 1 & KNN & SMOTETomek & True & log\_loss & 0.061 & friedman\_mse & 6 & 1 & 3 \\
+1018 & 2 & Simple & SMOTETomek & True & log\_loss & 0.185 & squared\_error & 6 & 12 & 3 \\
+1018 & 3 & KNN & SMOTE & True & exponential & 0.054 & friedman\_mse & 2 & 1 & 3 \\
 \midrule
-      1019 &       1 &     KNN & SMOTETomek &   True & exponential &       0.566058 &  friedman\_mse &                    11 &                    5 &         4 \\
-      1019 &       2 &     KNN &      SMOTE &   True & exponential &       0.686387 & squared\_error &                    10 &                    1 &         6 \\
-      1019 &       3 &  Simple & SMOTETomek &   True &    log\_loss &       0.358116 & squared\_error &                     7 &                    2 &         4 \\
+1019 & 1 & Simple & SMOTE & True & exponential & 0.398 & squared\_error & 31 & 4 & 4 \\
+1019 & 2 & Simple & SMOTETomek & True & log\_loss & 0.158 & friedman\_mse & 7 & 1 & 3 \\
+1019 & 3 & Simple & SMOTE & False & exponential & 0.666 & friedman\_mse & 5 & 6 & 4 \\
 \midrule
-      1021 &       1 &  Simple &      SMOTE &   True &    log\_loss &       0.230746 &  friedman\_mse &                    24 &                    8 &         5 \\
-      1021 &       2 &  Simple &      SMOTE &  False & exponential &       0.020508 &  friedman\_mse &                    12 &                    6 &        11 \\
-      1021 &       3 &     KNN & SMOTETomek &  False &    log\_loss &       0.283118 & squared\_error &                     5 &                    2 &         3 \\
+1021 & 1 & KNN & SMOTETomek & True & exponential & 0.018 & friedman\_mse & 7 & 6 & 5 \\
+1021 & 2 & Simple & SMOTE & False & log\_loss & 0.034 & squared\_error & 3 & 4 & 5 \\
+1021 & 3 & KNN & SMOTETomek & True & log\_loss & 0.141 & friedman\_mse & 7 & 3 & 6 \\
 \midrule
-      1040 &       1 &  Simple &      SMOTE &   True & exponential &       0.428100 &  friedman\_mse &                    14 &                    1 &         3 \\
-      1040 &       2 &     KNN &      SMOTE &   True & exponential &       0.690849 &  friedman\_mse &                    11 &                    4 &         4 \\
-      1040 &       3 &     KNN & SMOTETomek &   True & exponential &       0.545570 &  friedman\_mse &                     5 &                    5 &         2 \\
+1040 & 1 & KNN & SMOTETomek & True & log\_loss & 0.048 & friedman\_mse & 5 & 3 & 4 \\
+1040 & 2 & Simple & SMOTE & False & exponential & 0.588 & friedman\_mse & 4 & 3 & 3 \\
+1040 & 3 & Simple & SMOTE & False & log\_loss & 0.410 & friedman\_mse & 20 & 7 & 3 \\
 \midrule
-      1053 &       1 &  Simple & SMOTETomek &   True & exponential &       0.031338 &  friedman\_mse &                     3 &                   10 &         5 \\
-      1053 &       2 &  Simple &      SMOTE &   True &    log\_loss &       0.010315 &  friedman\_mse &                     8 &                    8 &         2 \\
-      1053 &       3 &  Simple & SMOTETomek &  False & exponential &       0.038175 &  friedman\_mse &                     5 &                    6 &         2 \\
+1053 & 1 & KNN & SMOTETomek & True & exponential & 0.014 & squared\_error & 15 & 1 & 3 \\
+1053 & 2 & Simple & SMOTETomek & False & exponential & 0.021 & squared\_error & 7 & 3 & 3 \\
+1053 & 3 & KNN & SMOTETomek & True & log\_loss & 0.270 & squared\_error & 8 & 8 & 2 \\
 \midrule
-      1461 &       1 &     KNN & SMOTETomek &  False & exponential &       0.097863 &  friedman\_mse &                     3 &                    4 &         5 \\
-      1461 &       2 &     KNN & SMOTETomek &   True & exponential &       0.129724 &  friedman\_mse &                    23 &                    4 &         7 \\
-      1461 &       3 &     KNN &      SMOTE &   True & exponential &       0.092295 & squared\_error &                    26 &                   14 &         6 \\
+1461 & 1 & KNN & SMOTETomek & False & exponential & 0.092 & squared\_error & 7 & 4 & 7 \\
+1461 & 2 & KNN & SMOTETomek & False & log\_loss & 0.035 & friedman\_mse & 4 & 7 & 5 \\
+1461 & 3 & Simple & SMOTETomek & False & log\_loss & 0.111 & friedman\_mse & 8 & 5 & 8 \\
 \midrule
-     41160 &       1 &     KNN &      SMOTE &  False &    log\_loss &       0.018754 &  friedman\_mse &                     4 &                   11 &        14 \\
-     41160 &       2 &  Simple & SMOTETomek &  False &    log\_loss &       0.025380 &  friedman\_mse &                     5 &                    2 &         8 \\
-     41160 &       3 &  Simple &      SMOTE &  False & exponential &       0.011618 & squared\_error &                     5 &                   16 &        10 \\
+41160 & 1 & Simple & SMOTE & False & log\_loss & 0.023 & friedman\_mse & 16 & 2 & 11 \\
+41160 & 2 & Simple & SMOTE & False & exponential & 0.043 & friedman\_mse & 30 & 2 & 9 \\
+41160 & 3 & Simple & SMOTETomek & False & log\_loss & 0.058 & squared\_error & 5 & 3 & 11 \\
 \bottomrule
 \end{tabular}
 \end{sidewaystable}
 
 \begin{sidewaystable}
 \footnotesize
-\caption{Incumbent hyperparameter configurations for the SVM classifier}
+\caption{Incumbent hyperparameters configurations for the SVM classifier}
 \center
 \begin{tabular}{llllllllll}
 \toprule
-Dataset ID & CV fold & Imputer &    Sampler & Scaler &        C &  Kernel & Shrinking &  Tolerance & Class weight \\
+Dataset ID & CV fold & Imputer & Sampler & Scaler & C & Kernel & Shrinking & Tolerance & Class weight \\
 \midrule
-       976 &       1 &     KNN &       None &   True & 6.812195 &     rbf &      True & 0.000136 &     balanced \\
-       976 &       2 &  Simple & SMOTETomek &   True & 5.942369 &     rbf &      True & 0.002453 &     balanced \\
-       976 &       3 &  Simple &      Tomek &   True & 5.042524 &     rbf &     False & 0.000554 &     balanced \\
+976 & 1 & KNN & SMOTETomek & True & 8.489 & rbf & True & 0.0085 & balanced \\
+976 & 2 & Simple & None & True & 8.670 & rbf & False & 0.0016 & balanced \\
+976 & 3 & Simple & None & True & 4.036 & rbf & False & 0.0005 & balanced \\
 \midrule
-       980 &       1 &  Simple & SMOTETomek &   True & 2.461050 &    poly &     False & 0.004004 &     balanced \\
-       980 &       2 &  Simple &      SMOTE &   True & 0.810882 &    poly &      True & 0.002291 &     balanced \\
-       980 &       3 &     KNN &      Tomek &  False & 1.221203 &     rbf &     False & 0.003969 &     balanced \\
+980 & 1 & Simple & SMOTETomek & True & 2.230 & poly & False & 0.0040 & balanced \\
+980 & 2 & KNN & Tomek & True & 0.893 & poly & True & 0.0030 & balanced \\
+980 & 3 & KNN & None & False & 1.061 & rbf & True & 0.0006 & balanced \\
 \midrule
-      1002 &       1 &     KNN &      Tomek &   True & 0.230800 &  linear &     False & 0.002982 &     balanced \\
-      1002 &       2 &     KNN & SMOTETomek &   True & 0.127835 & sigmoid &      True & 0.001461 &     balanced \\
-      1002 &       3 &  Simple & SMOTETomek &   True & 0.384752 &  linear &     False & 0.005138 &     balanced \\
+1002 & 1 & KNN & SMOTETomek & True & 0.161 & linear & True & 0.0017 & balanced \\
+1002 & 2 & KNN & Tomek & True & 0.199 & linear & False & 0.0003 & balanced \\
+1002 & 3 & Simple & SMOTE & True & 0.169 & linear & False & 0.0025 & balanced \\
 \midrule
-      1018 &       1 &  Simple &      SMOTE &   True & 0.202185 & sigmoid &     False & 0.000893 &         None \\
-      1018 &       2 &  Simple &       None &   True & 0.245091 &  linear &      True & 0.001234 &     balanced \\
-      1018 &       3 &  Simple & SMOTETomek &   True & 0.135464 &  linear &     False & 0.000205 &     balanced \\
+1018 & 1 & Simple & SMOTETomek & True & 0.213 & sigmoid & True & 0.0007 & None \\
+1018 & 2 & Simple & Tomek & True & 0.621 & poly & True & 0.0001 & balanced \\
+1018 & 3 & KNN & SMOTETomek & True & 0.113 & linear & True & 0.0039 & balanced \\
 \midrule
-      1019 &       1 &     KNN &      Tomek &  False & 9.389382 &    poly &     False & 0.000422 &         None \\
-      1019 &       2 &     KNN & SMOTETomek &  False & 1.538617 &    poly &     False & 0.000794 &         None \\
-      1019 &       3 &     KNN & SMOTETomek &  False & 9.673782 &     rbf &      True & 0.002117 &     balanced \\
+1019 & 1 & Simple & None & False & 2.186 & poly & True & 0.0062 & balanced \\
+1019 & 2 & Simple & SMOTETomek & False & 6.871 & rbf & True & 0.0040 & None \\
+1019 & 3 & Simple & Tomek & False & 7.892 & rbf & True & 0.0003 & balanced \\
 \midrule
-      1021 &       1 &     KNN &       None &   True & 7.955140 &     rbf &     False & 0.000758 &     balanced \\
-      1021 &       2 &     KNN &       None &   True & 8.527953 &     rbf &     False & 0.000206 &     balanced \\
-      1021 &       3 &     KNN &      Tomek &   True & 7.187957 &     rbf &      True & 0.000581 &     balanced \\
+1021 & 1 & Simple & None & True & 6.803 & rbf & True & 0.0058 & balanced \\
+1021 & 2 & Simple & Tomek & True & 7.117 & rbf & True & 0.0011 & balanced \\
+1021 & 3 & Simple & Tomek & True & 6.244 & rbf & True & 0.0005 & balanced \\
 \midrule
-      1040 &       1 &  Simple & SMOTETomek &   True & 0.506277 &  linear &      True & 0.001319 &         None \\
-      1040 &       2 &     KNN &      Tomek &   True & 0.126113 &  linear &     False & 0.003028 &     balanced \\
-      1040 &       3 &  Simple & SMOTETomek &   True & 1.165825 & sigmoid &      True & 0.002011 &         None \\
+1040 & 1 & KNN & SMOTE & True & 0.218 & linear & True & 0.0019 & None \\
+1040 & 2 & KNN & SMOTETomek & True & 0.143 & linear & True & 0.0001 & balanced \\
+1040 & 3 & KNN & SMOTE & True & 1.384 & sigmoid & False & 0.0012 & balanced \\
 \midrule
-      1053 &       1 &  Simple & SMOTETomek &   True & 2.294233 &     rbf &     False & 0.000396 &         None \\
-      1053 &       2 &  Simple &      Tomek &   True & 3.810805 &     rbf &     False & 0.009082 &     balanced \\
-      1053 &       3 &     KNN & SMOTETomek &   True & 1.594506 &  linear &     False & 0.001114 &     balanced \\
+1053 & 1 & Simple & None & True & 0.851 & rbf & True & 0.0009 & balanced \\
+1053 & 2 & Simple & SMOTE & True & 0.384 & rbf & True & 0.0009 & balanced \\
+1053 & 3 & Simple & Tomek & True & 0.900 & rbf & False & 0.0012 & balanced \\
 \midrule
-      1461 &       1 &  Simple & SMOTETomek &   True & 0.485222 & sigmoid &     False & 0.000393 &         None \\
-      1461 &       2 &  Simple &      Tomek &   True & 3.769543 & sigmoid &      True & 0.001322 &     balanced \\
-      1461 &       3 &  Simple &       None &   True & 0.533370 & sigmoid &     False & 0.008771 &     balanced \\
+1461 & 1 & Simple & None & True & 0.363 & sigmoid & False & 0.0004 & balanced \\
+1461 & 2 & KNN & Tomek & True & 0.399 & sigmoid & False & 0.0004 & balanced \\
+1461 & 3 & Simple & SMOTETomek & True & 0.526 & rbf & False & 0.0003 & balanced \\
 \midrule
-     41160 &       1 &     KNN &      Tomek &   True & 8.007605 &     rbf &     False & 0.000958 &         None \\
-     41160 &       2 &     KNN &      SMOTE &   True & 0.227120 &     rbf &      True & 0.001452 &     balanced \\
-     41160 &       3 &  Simple &      SMOTE &   True & 9.758566 & sigmoid &     False & 0.000217 &     balanced \\
+41160 & 1 & Simple & SMOTETomek & True & 0.190 & sigmoid & True & 0.0002 & balanced \\
+41160 & 2 & KNN & SMOTE & True & 0.586 & sigmoid & True & 0.0007 & balanced \\
+41160 & 3 & KNN & SMOTETomek & True & 1.275 & rbf & False & 0.0037 & None \\
 \bottomrule
 \end{tabular}
 \end{sidewaystable}

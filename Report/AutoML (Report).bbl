@@ -8,4 +8,10 @@ Awad, N., Mallik, N., and Hutter, F. (2021).
   Joint Conference on Artificial Intelligence, {IJCAI-21}}, pages 2147--2153.
   ijcai.org.
 
+\bibitem[GeeksforGeeks, 2023]{GfG}
+GeeksforGeeks (2023).
+\newblock Support vector machine in machine learning.
+\newblock
+  \url{https://www.geeksforgeeks.org/support-vector-machine-in-machine-learning/}.
+
 \end{thebibliography}
