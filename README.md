@@ -2,7 +2,7 @@
 
 This project was part of the AutoML course in the winter term 2022/23 at LMU Munich by [Janek Thomas](https://www.slds.stat.uni-muenchen.de/people/thomas/). The key objective was to tune an AutoML system that outperforms a random forest baseline. The report can be found [here](https://github.com/constantin-crailsheim/automl_imbalanced/blob/main/Report/AutoML%20(Report).pdf).
 
-# Fild structure
+# File and folder structure
 
 The repo contains the following files and folder:
 - `ImbalancedAutoML.py`: Contains ImbalancedAutoML class, which is the AutoML system used.
