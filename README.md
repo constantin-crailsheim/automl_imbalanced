@@ -14,7 +14,7 @@ The repo contains the following files and folder:
 - `requirements.txt`: Contains all package requirements needed.
 - `results`: Folder where results, plots and tables are stored.
 - `report`: Folder with report files.
-
+ 
 # Setup 
 
 ## Environment and requirements
@@ -31,6 +31,15 @@ Then install the recommended requirements with:
 ```(bash)
 pip install -r requirements.txt
 ```
+
+The used packages are the following:
+- `openml`: Used to download the benchmarking datasets.
+- `pandas`: Mostly used to generate dataframes to convert to Latex tables.
+- `numpy`: Used for basic data operations and storage and is base for sklearn functions.
+- `scikit-learn`: Elements of pipeline like preprocessing and models are taken from here.
+- `imbalanced-learn`: Imbalanced sampling methods that can be easily combines with sklearn.
+- `dehb`: Optimization framework to tune hyperparameter of pipeline.
+- `ConfigSpace`: Used to define and sample from search space. 
 
 # Replication of results
 
