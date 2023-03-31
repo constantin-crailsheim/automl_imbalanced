@@ -132,7 +132,7 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
                 "criterion", items=["friedman_mse", "squared_error"], default="friedman_mse"
             )
             min_samples_split = Integer(
-                'min_samples_split', (1, 32), default=2, log=True
+                'min_samples_split', (2, 32), default=2, log=True
             )
             min_samples_leaf = Integer(
                 'min_samples_leaf', (1, 16), default=1, log=True
