@@ -123,7 +123,7 @@
 \maketitle
 
 \begin{abstract}
-The AutoML system tunes a ML pipeline consisting of an imputer, an optional sampler, an optional scaler and a choice of three models. Since the tasks are imbalanced tabular datasets, a random forest classifier, a gradient boosting classifier and a SVM classifier are reasonable choices, which should yield a good overall prediction by majority voting. I used DEHB as an optimizer, which combines the advantages of differential evolutions and hyperband, i.e., generating promising new hyperparameter configurations for more costly evaluations based on initial cheap evaluations. Overall, the improvement in performance compared to the untuned random forest classifier baseline is 0.8\% and 25.9\% as measured by balanced accuarcy. Thus the AutoML system outperforms the baseline across all datasets and the algorithm is significantly different for 9 out of 10 datasets by the McNemar test. The source code is available at: \url{https://github.com/constantin-crailsheim/automl_imbalanced}
+The AutoML system tunes an ensemble of three modeling pipelines with an imputer, an optional sampler, an optional scaler as pre-preprocessing. Since the tasks are imbalanced tabular datasets, a random forest classifier, a gradient boosting classifier and a SVM classifier are reasonable model choices, which should yield a good overall prediction by majority voting. I used DEHB as an optimizer, which combines the advantages of differential evolutions and hyperband by generating promising new hyperparameter configurations for more costly evaluations based on initial cheap evaluations. The improvement in performance compared to the untuned random forest classifier baseline is 0.8\% and 25.9\% as measured with balanced accuracy. Thus, the AutoML system outperforms the baseline across all datasets and the algorithm is significantly different for 9 out of 10 datasets using the McNemar test. The source code is available at: \url{https://github.com/constantin-crailsheim/automl_imbalanced}
 \end{abstract}
 
 % content will be automatically hidden during submission
@@ -133,14 +133,14 @@ The AutoML system tunes a ML pipeline consisting of an imputer, an optional samp
 
 \section{Introduction}
 
-The objective of the AutoML system is to yield good performance as measured by the balanced accuracy on imbalanced tabular datasets and to be able to deal with missing values. Thus, it optimizes a ML pipeline consisting of five elements. First, a choice of two imputers replaces missing values. Then, an optional sampling method is applied to deal with imbalance in the targets, which can be under- and/or oversampling methods. Next, the pre-processed integer features are rounded such that they do not take values that would not appear in the original data. After optionally normalizing all features, three different models were fitted, i.e., a random forest classifier, a gradient boosting classifier and a SVM classifier. The pre-processing choices and the hyperparameters of the model were optimized by DEHB, which is a computationally cheap optimizer that works well on discrete search spaces. The final predictions are derived by majority voting over the individual predictions of the best pipelines for each model. This means that the overall predictions should be in particular good if the errors of the models are not too correlated.
+The objective of the AutoML system is to achieve good performance on imbalanced tabular datasets, measured in terms of balanced accuracy, and to be able to handle missing values. Thus, it optimizes three ML pipelines consisting of five elements. First, a choice of two imputers is used to handle missing values. Then, an optional sampling method is applied to deal with imbalance in the targets, which can be under- and/or oversampling methods. Next, the pre-processed integer features are rounded so that they do not take on values that would not appear in the original data. After optionally standardizing all features, for each pipeline a different models was fitted, i.e., a random forest classifier, a gradient boosting classifier and a SVM classifier. The pre-processing choices and the hyperparameters of the model were optimized by DEHB, which is a computationally cheap optimizer that works well on discrete search spaces. The final predictions are derived by majority voting over the individual predictions of the best pipelines for each model. This means that the overall predictions should be in particular good if the errors of the models are not too correlated.
 
 \section{Method}
 
 This section outlines the specific choices of the AutoML system and how it will be optimized and evaluated. The choices of \texttt{sklearn.impute} for the imputation strategy are:
 \begin{itemize}
 \item The \href{https://scikit-learn.org/stable/modules/generated/sklearn.impute.SimpleImputer.html}{\texttt{SimpleImputer}} is an univariate imputer, which completes missing values with a descriptive statistic per feature. I chose the median, since it is less sensitive to outliers than the mean.
-\item The \href{https://scikit-learn.org/stable/modules/generated/sklearn.impute.KNNImputer.html#sklearn.impute.KNNImputer}{\texttt{KNNImputer}} replaces missing values by the mean value of its 5 nearest neighbors as default based on Euclidian distance of their non-missing observations of the same feature. 
+\item The \href{https://scikit-learn.org/stable/modules/generated/sklearn.impute.KNNImputer.html#sklearn.impute.KNNImputer}{\texttt{KNNImputer}} replaces missing values by the mean value of its (by default) 5 nearest neighbors, as determined by the Euclidean distance of their non-missing observations of the same feature. 
 \end{itemize}
 
 The choices of \texttt{imblearn} for the data-level sampling method to yield a balanced dataset are:
@@ -151,13 +151,13 @@ The choices of \texttt{imblearn} for the data-level sampling method to yield a b
 \item No sampling method would allow algorithmic-level methods to deal with the imbalanced data. 
 \end{itemize}
 
-The above pre-processing methods could generate numeric values for features that should contain only integers (e.g., ordinal categorical features), since they impute missing values by means or medians and generate new samples by interpolation. Thus, I added another layer to the pipeline, which rounds all observations of these features to the closest integer. \\
+The above pre-processing methods might generate numeric values for features that should contain only integers (e.g., ordinal categorical features), since they impute missing values by means or medians and generate new samples by interpolation. Thus, I added another layer to the pipeline, which rounds all observations of these features to the closest integer. \\
 
-The last step of pre-processing is  the choice of whether to apply the \href{https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html}{\texttt{StandardScaler}} of \texttt{sklearn.preprocessing} to standardize the features. This will be in particular useful for the SVM, since an RBF kernel assumes features centered around zero and similar variance across features. \\
+The last step of pre-processing is  the choice of whether to apply the \href{https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html}{\texttt{StandardScaler}} of \texttt{sklearn.preprocessing} to standardize the features. This will be particularly useful for the SVM, since an RBF kernel assumes features centered around zero and similar variance across features. \\
 
-Subsequently, the hyperparameters of the three models of the ensemble were optimized, where I defined the search space with the \href{https://automl.github.io/ConfigSpace/main/}{\texttt{ConfigSpace}} package. For almost all hyperparameters, the default was set to the default specified for each model. I chose the search space mostly such that it is centered around the default while accounting for log scale. In those cases where the default would be a the lower end of a reasonable search space, I chose the upper bound reasonably higher. \\
+Subsequently, the hyperparameters of the three models of the ensemble were tuned, where I defined the search space with the \href{https://automl.github.io/ConfigSpace/main/}{\texttt{ConfigSpace}} package. For almost all hyperparameters, the default was set to the default specified for each model. In most cases, I chose the search space to be centered around the default, accounting for log scale. In those cases where the default would be at the lower end of a sensible search space, I chose the upper bound to be reasonably higher. \\
 
-The first model in the ensemble is a \href{https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html}{\texttt{RandomForestClassifier}} from \texttt{sklearn.ensemble}. It can handle all data types well and generalizes well by having a low variance due to ensembling over relatively uncorrelated models. The hyperparameters, which will all be sampled uniformly, are:
+The first model in the ensemble is a \href{https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html}{\texttt{RandomForestClassifier}} from \texttt{sklearn.ensemble}. It can handle all data types well and generalizes well by having a low variance due to ensembling over relatively uncorrelated models. The hyperparameters, which are all uniformly sampled, are:
 
 \begin{table}[H]
 \centering
@@ -166,7 +166,7 @@ The first model in the ensemble is a \href{https://scikit-learn.org/stable/modul
   Hyperparameter & Data type & Search space & Default & Other \\
  \hline
  \texttt{criterion} & Categorical & \{\texttt{gini}, \texttt{entropy}, \texttt{log\_loss}\} & \texttt{gini} &   \\ 
- \texttt{max\_depth}  & Integer & [5,15] & 10 &  \\ 
+ \texttt{max\_depth}  & Integer & [5,25] & 15 &  \\ 
  \texttt{min\_samples\_split} & Integer & [1, 32] & 2 & Log scale \\ 
  \texttt{min\_samples\_leaf} & Integer & [1, 16] & 1 & Log scale  \\ 
  \texttt{max\_features} & Integer & [0.1, 0.9] & 0.5 &   \\  
@@ -175,7 +175,7 @@ The first model in the ensemble is a \href{https://scikit-learn.org/stable/modul
 \end{tabular}
 \end{table}
 
-The \texttt{class\_weight} is an algorithm-level method that deals with imbalanced data by giving less frequent classes more weight. It will only have an effect if no data-level sampling method was used, since in the other case the dataset passed to the model will be balanced. \\
+The \texttt{class\_weight} is an algorithm-level method that deals with imbalanced data by giving more weight to less frequent classes. It will only have an effect if no data-level sampling method has been used, since otherwise the dataset passed to the model will be already balanced. \\
 
 The second model in the ensemble is a \href{https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html}{\texttt{GradientBoostingClassifier}} from \texttt{sklearn.ensemble}. It has strong predictive performance by iteratively fitting weak learners on the error of the previous learner and has similar advantages as the \texttt{RandomForestClassifier}. The hyperparameters are:
 
@@ -190,13 +190,13 @@ The second model in the ensemble is a \href{https://scikit-learn.org/stable/modu
  \texttt{criterion} & Categorical & \{\texttt{friedman\_mse}, \texttt{squared\_error}\} & \texttt{friedman\_mse} &   \\ 
  \texttt{min\_samples\_split} & Integer & [1, 32] & 2 & Log scale \\ 
  \texttt{min\_samples\_leaf} & Integer & [1, 16] & 1 & Log scale  \\
- \texttt{max\_depth}  & Integer & [2,10] & 3 &  \\ 
+ \texttt{max\_depth}  & Integer & [2,15] & 3 &  \\ 
  \hline
 \end{tabular}
 \end{table}
 
 \newpage
-The third model in the ensemble is a Support Vector Classifier (\href{https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html#sklearn.svm.SVC}{\texttt{SVC}}) from \texttt{sklearn.svm}. This model works in particular well on easily to separate datasets, on small datasets and in high-dimensional spaces \citep{GfG}. The hyperparameters are:
+The third model in the ensemble is a Support Vector Classifier (\href{https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html#sklearn.svm.SVC}{\texttt{SVC}}) from \texttt{sklearn.svm}. This model works particularly well on easily separable datasets, on small data sets, and in high-dimensional spaces \citep{GfG}. The hyperparameters are:
 
 \vspace{-0.3cm}
 \begin{table}[H]
@@ -215,17 +215,17 @@ The third model in the ensemble is a Support Vector Classifier (\href{https://sc
 \end{table}
 \vspace{-0.3cm}
 
-To optimize the hyperparameter of the AutoML system, I used \href{https://github.com/automl/dehb}{\texttt{DEHB}} by \citet{dehb}, which combines differential evolution and hyperband. Differential evolution constructs a new mutant vector from three random parents and then generates the offspring by randomly selecting values from the new mutant vector with probability $p$ and otherwise from one of the corresponding parents. Hyperband allows to search the whole search space with cheap evaluations and only trains more costly models on promising areas of the search space. The algorithm starts by sampling $N$ random hyperparameter configurations, which are evaluated at the lowest budget. Then the best $1/\eta$ of these configurations are evaluated at a $\eta$-times higher budget and this process is repeated until the highest fidelity (denoted here by $f$) is reached, thus $N=\eta^{f-1}$. After completing one iteration, the algorithm restarts with new instantiations and evaluates these at the second lowest fidelity, thereby hedging against bad initializations. \texttt{DEHB} combines both approaches by generating the hyperparameter configurations for the next fidelity by differential evolution from the lower fidelity as parent pool. The authors state that \texttt{DEHB} is computationally cheap with high speed-up gains compared to \texttt{BOHB}. Furthermore, it has strong final performance for discrete search spaces, which I have for various hyperparameters. The authors experiments have shown that \texttt{DEHB} also outperforms \texttt{SMAC} by mean ranks across all of their chosen benchmarks. For those reasons, I chose DEHB as an efficient optimizer for this problem. \\
+To optimize the hyperparameters of the AutoML system, I used \href{https://github.com/automl/dehb}{\texttt{DEHB}} by \citet{dehb}, which combines differential evolution and hyperband. Differential evolution constructs a new mutant vector from three random parents and then generates the offspring by randomly selecting values from the new mutant vector with probability $p$ and otherwise from one of the corresponding parents. Hyperband allows the whole search space to be searched with cheap evaluations and trains more costly models only on promising regions of the search space. The algorithm starts by sampling $N$ random hyperparameter configurations, which are evaluated at the lowest budget. Then the best $1/\eta$ of these configurations are evaluated at a $\eta$-times higher budget and this process is repeated until the highest fidelity (denoted here by $f$) is reached, thus $N=\eta^{f-1}$. After completing an iteration, the algorithm restarts with new instantiations and evaluates them at the second lowest fidelity, thereby hedging against bad initializations. \texttt{DEHB} combines both approaches by generating the hyperparameter configurations for the next fidelity by differential evolution from the lower fidelity as parent pool. The authors state that \texttt{DEHB} is computationally cheap with high speed-up gains compared to \texttt{BOHB}. Furthermore, it has strong final performance for discrete search spaces, which I have for various hyperparameters. The authors' experiments have shown that \texttt{DEHB} also outperforms \texttt{SMAC} by mean ranks across all of their chosen benchmarks. For those reasons, I chose DEHB as an efficient optimizer for this problem. \\
 
-For the optimization, I set $\eta=3$ and $f=4$, which implies an initial population of $N=3^{3}=27$. I set the budget for the \texttt{RandomForestClassifier} and the \texttt{GradientBoostingClassifier}, as indicated by the number of trees in the forest, to a minimum of 10 and maximum of 270. For \texttt{SVC}, I chose the maximum number of iterations as budget and I set it to a minimum of 500 and maximum of 13500. However, the runtime between the lowest and largest budget usually did not differ too much since the SVM optimizer most likely already converged in most cases and the evaluation was relatively cheap compared to the forest based classifiers for most datasets. Thus, the \texttt{SVC} mostly benefits from differential evolution and the successive halving element is not as important, since many configurations can be tested irrespecitively. Hence, I allocated 40\% of the maximum cost to optimizing the forest based models and 20\% to optimizing the \texttt{SVC}. \\
+For the optimization, I set $\eta=3$ and $f=4$, which implies an initial population of $N=3^{3}=27$. For the \texttt{RandomForestClassifier} and the \texttt{GradientBoostingClassifier}, I set the budget, as indicated by the number of trees in the forest, to a minimum of 10 and a maximum of 270. For \texttt{SVC}, I chose the maximum number of iterations as budget and I set it to a minimum of 500 and maximum of 13500. However, the runtime between the lowest and highest budget usually did not differ too much, since the SVM optimizer most likely already converged in most cases and the evaluation was relatively cheap compared to the forest based classifiers for most datasets. Thus, the \texttt{SVC} mostly benefits from differential evolution and the successive halving element is not as important, since many configurations can be tested irrespectively. Hence, I allocated 40\% of the maximum cost to optimizing the forest based models and 20\% to optimizing the \texttt{SVC}. \\
 
-To evaluate the performance of the AutoML system, I used 3-fold external and 4-fold internal cross-validation. I used stratified CV to ensure that the class imbalance of the targets is preserved in each fold. Given a total budget of 3600 seconds per dataset, a total of 1200 second could be used to optimize the AutoML system in each fold. Since the budget is not that larger after accounting for cross-validation, I tuned only a selection of hyperparameters of the actual model and the hyperparameters of the preprocessing functions were kept at their default values. \\
+To evaluate the performance of the AutoML system, I used 3-fold external and 4-fold internal cross-validation. I used stratified CV to ensure that the class imbalance of the targets was preserved in each fold. Given a total budget of 3600 seconds per dataset, a total of 1200 seconds could be used to optimize the AutoML system in each fold. Since the budget is not that large after accounting for cross-validation, I only tuned a selection of hyperparameters of the actual model and I kept the hyperparameters of the preprocessing functions at their default values. \\
 
-After the optimization routine, all three model pipelines are passed to the \href{https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.VotingClassifier.html}{\texttt{VotingClassifier}} from \texttt{sklearn.ensemble} and fitted with their incumbent configurations. Then the imbalance sampling is removed from the pipeline to not sample for the test set. Thus, the final AutoML system is an ensemble of three pipelines with majority voting for the final classification. 
+After the optimization routine, all three model pipelines are passed to the \href{https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.VotingClassifier.html}{\texttt{VotingClassifier}} from \texttt{sklearn.ensemble} and are fitted with their incumbent configurations. Then, the imbalance sampling is removed from the pipeline in order to not sample for the test set. Thus, the final AutoML system is an ensemble of three pipelines with majority voting for the final classification. 
 
 \section{Experiments}
 
-To run the optimization, I used a M1 Pro chip and 32 GB RAM from 2021. The external cross-validation performance in terms of balanced accuracy of the AutoML system vs. the untuned \texttt{RandomForestClassifer} baseline for each dataset id is shown below:
+To run the optimization, I used a M1 Pro chip (2021) and 32 GB RAM. The external cross-validation performance in terms of balanced accuracy of the AutoML system vs. the untuned \texttt{RandomForestClassifer} baseline for each dataset id is shown below:
 
 \vspace{-0.2cm}
 \begin{table}[H]
@@ -244,15 +244,15 @@ McNemar test & 37.19 & 30.94 & 927.63 & 906.28 & 8.75 & 11.40 & 1.86 & 287.88 & 
 \end{table}
 \vspace{-0.2cm}
 
-Hence, the AutoML system outperforms the baseline across all datasets with an improvement between 0.8\% and 25.9\%. To evaluate whether the two algorithms are significantly different, I used the McNemar test, which was computed over the concatenated predictions of all folds. The reference distribution is $\chi_{1}^{2}$ and thus the algorithms would be significantly different at the 5\%-level if the test statistic is larger than 3.84, which is the case for all datasets except for dataset 1040. However, for this dataset the balanced accuracy is still 3.2\% better and above 99\%. \\
+Hence, the AutoML system outperforms the baseline across all datasets with an improvement ranging from 0.8\% to 25.9\%. To evaluate whether the two algorithms are significantly different, I used the McNemar test computed over the concatenated predictions of all folds. The reference distribution is $\chi_{1}^{2}$, so the algorithms would be significantly different at the 5\%-level if the test statistic is larger than 3.84, which is the case for all datasets except for dataset 1040. However, for this dataset the balanced accuracy is still 3.2\% better and above 99\%. \\
 
-The plots of the trajectories for each dataset are shown in appendix A. For dataset 976, 980 1019, the \texttt{SVC} is the top performing estimator, followed by the \texttt{GradientBoostingClassifier} and the \texttt{RandomForestClassifier}. For the other datasets, the ranking is not as clear. For the last two datasets, the \texttt{SVC} has the worst performance, most likely since SVMs are costlier to fit given the large number of observations and less iterations to tune the hyperparameters were possible. However, the overall performance of the AutoML system is still similar to the best individual pipelines due to majority voting. The benchmarks are usually outperformed after at most 50 seconds, except for the last two datasets due to the underperforming \texttt{SVC}. The final externally cross-validated performance is a bit lower than the performances of the individual algorithms for a few datasets, since the performance of the individual algorithms tends to be overly optimistic due to the hyperparameters being tuned on that specific fold. \\
+The plots of the trajectories for each dataset are shown in Appendix A. For the datasets 976, 980 1019, the \texttt{SVC} is the top performing estimator, followed by the \texttt{GradientBoostingClassifier} and the \texttt{RandomForestClassifier}. For the other datasets, the ranking is not as clear. For the last two datasets, the \texttt{SVC} has the worst performance, most likely because SVMs are costlier to fit given the large number of observations and fewer iterations to tune the hyperparameters were possible. However, the overall performance of the AutoML system is still similar to the best individual pipelines due to majority voting. The benchmarks are usually outperformed after at most 50 seconds, except for the last two datasets due to the underperforming \texttt{SVC}. The final externally cross-validated performance is slightly lower than the performance of the individual algorithms for a few datasets, since the performance of the individual algorithms tends to be overly optimistic as the hyperparameters were tuned on that specific fold. \\
 
-The chosen incumbents for each model pipeline for all datasets are shown in appendix B. Some key trends are as following: The preferred sampling method for \texttt{RandomForestClassifier} and \texttt{SVC} is quite mixed, but for the \texttt{GradientBoostingClassifier} only oversampling or mixed methods were selected. As expected, \texttt{SVC} uses the \texttt{StandardScaler} for all datasets, except 1019. If no sampling method was chosen, the imbalance was always accounted for by class weights. Lastly, the \texttt{RandomForestClassifier} prefers on average deeper trees than the \texttt{GradientBoostingClassifier}. \\
+The selected incumbents for each model pipeline for all datasets are shown in Appendix B. Some key trends are as following: The preferred sampling method for \texttt{RandomForestClassifier} and \texttt{SVC} is quite mixed, but for the \texttt{GradientBoostingClassifier} only oversampling or mixed methods were chosen. As expected, \texttt{SVC} uses the \texttt{StandardScaler} for all datasets, except 1019. If no sampling method was selected, the imbalance was always accounted for by class weights. Finally, the \texttt{RandomForestClassifier} tends to prefer deeper trees than the \texttt{GradientBoostingClassifier}. \\
 
 \section{Conclusion}
 
-The AutoML system outperforms the benchmark across all datasets and has thus has proven to be useful. However, some improvements are still possible if a larger budget would be available. The hyperparameters of the pre-processing methods could be also tuned to fit better to each dataset and algorithm. Furthermore, a stacking classifier could be trained on the three algorithms, which would allow to find the best weighted combination of the predictions of each individual algorithm for the final prediction of the AutoML system. I conducted experiments with stacking, but the training on the final incumbents with the highest budgets took fairly long, thus I decided to use the budget rather to improve the performance of the individual estimators. Overall, however, this AutoML system is capable of tuning well performing pipelines for imbalanced classification tasks.
+The AutoML system outperforms the benchmark across all datasets and has thus demonstrated its usefulness. However, some improvements are still possible if a larger budget were available. The hyperparameters of the pre-processing methods could also be tuned to better fit to each dataset and algorithm. Furthermore, a stacking classifier could be trained on the three algorithms, which would allow to find the best weighted combination of the predictions of each individual algorithm for the final prediction of the AutoML system. I conducted experiments with stacking, but the training on the final incumbents with the highest budgets took fairly long, thus I decided to rather use the budget to improve the performance of the individual estimators. Overall, however, this AutoML system is capable of tuning well performing pipelines for imbalanced classification tasks.
 
 
 \bibliography{References.bib}
@@ -265,7 +265,7 @@ The AutoML system outperforms the benchmark across all datasets and has thus has
 
 \section{Trajectories}
 
-The following plots show the trajectories of the incumbent performance of all three model pipelines (\texttt{RandomForestClassifier} (RFC), \texttt{RandomForestClassifier} (GBC), \texttt{SVC}) evaluated with internal CV in each fold, over runtime. Furthermore, the external CV of the untuned RFC baseline is plotted as grey horizontal line and the external CV of the final performance of the AutoML system is plotted as purple dot at the maximum runtime per model in each fold.
+The following plots show the trajectories of the incumbent performance of all three model pipelines (\texttt{RandomForestClassifier} (RFC), \texttt{RandomForestClassifier} (GBC) over runtime, \texttt{SVC}) evaluated with internal CV in each fold. Furthermore, the external CV of the untuned RFC baseline is plotted as grey horizontal line and the external CV of the final performance of the AutoML system is plotted as purple dot at the maximum runtime per model in each fold.
 
 \begin{figure}[H]
  \centering
@@ -329,7 +329,7 @@ The following plots show the trajectories of the incumbent performance of all th
 
 \section{Incumbent hyperparameters}
 
-The following tables shows the incumbent hyperparameter configurations for each algorithm and each dataset in each fold. 
+The following tables show the incumbent hyperparameter configurations for each algorithm and each dataset in each fold. 
 
 \begin{sidewaystable}
 \footnotesize
@@ -485,7 +485,7 @@ Dataset ID & CV fold & Imputer & Sampler & Scaler & C & Kernel & Shrinking & Tol
 \end{tabular}
 \end{sidewaystable}
 
-\section{Information about datasets}
+\section{Meta data of datasets}
 
 \begin{table}[H]
 \center
