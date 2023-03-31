@@ -1,1 +1,0 @@
-{"config": {"criterion": "squared_error", "imputation_strategy": "Simple", "learning_rate": 0.011618040607475531, "loss": "exponential", "max_depth": 10, "min_samples_leaf": 16, "min_samples_split": 5, "sampling_strategy": "SMOTE", "scaling_strategy": "False"}, "score": -0.7501563114645087, "info": {"test_score": 0.7501563114645087, "budget": 30.0}}

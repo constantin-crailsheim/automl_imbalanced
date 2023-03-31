@@ -1,1 +1,0 @@
-{"config": {"class_weight": "balanced_subsample", "criterion": "log_loss", "imputation_strategy": "Simple", "max_depth": 17, "max_features": 0.11528940922077156, "min_samples_leaf": 1, "min_samples_split": 4, "sampling_strategy": "SMOTETomek", "scaling_strategy": "True"}, "score": -0.9799406350786369, "info": {"test_score": 0.9799406350786369, "budget": 270.0}}
