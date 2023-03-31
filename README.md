@@ -17,8 +17,6 @@ The repo contains the following files and folder:
  
 # Setup 
 
-## Environment and requirements
-
 First set up a conda environment:
 
 ```(bash)
