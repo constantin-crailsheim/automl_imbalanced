@@ -1,6 +1,6 @@
 # AutoML Project: Imbalanced data classification
 
-This project was part of the AutoML course in the winter term 2022/23 at LMU Munich by [Janek Thomas](https://www.slds.stat.uni-muenchen.de/people/thomas/). The key objective was to tune an AutoML system that outperforms a random forest baseline on 10 imbalanced classification tasks. The report can be found [here](https://github.com/constantin-crailsheim/automl_imbalanced/blob/main/Report/AutoML%20(Report).pdf).
+This project was part of the AutoML course in the winter term 2022/23 at LMU Munich by [Janek Thomas](https://www.slds.stat.uni-muenchen.de/people/thomas/). The key objective was to tune an AutoML system that outperforms a random forest baseline on 10 imbalanced classification tasks. The report can be found [here](https://github.com/constantin-crailsheim/automl_imbalanced/blob/main/report/AutoML%20(Report).pdf).
 
 # File and folder structure
 
