@@ -1,12 +1,14 @@
 
 import os
 import pickle
+import json
 import warnings
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+
+from data import Dataset
 from configuration import data_ids, output_path, total_cost, outer_cv_folds, y_min_dict, y_max_dict
-import json
 
 # Store Latex table of benchmark perfomance across all datasets
 
@@ -98,7 +100,7 @@ for dataset in data_ids:
     plt.xlabel("Wallclock time in seconds")
     plt.ylabel("Balanced accuracy")
     plt.title("Trajectories of dataset {}".format(dataset))
-    plt.legend(["Random forest (CV 1)", "Random forest (CV 2)", "Random forest (CV 3)", "Gradient boosting (CV 1)", "Gradient boosting (CV 2)", "Gradient boosting (CV 3)", "SVM (CV 1)", "SVM (CV 2)", "SVM (CV 3)", "RF baseline (ECV)", "AutoML sytem (ECV)"])
+    plt.legend(["RFC (CV 1)", "RFC (CV 2)", "RFC (CV 3)", "GBC (CV 1)", "GBC (CV 2)", "GBC (CV 3)", "SVM (CV 1)", "SVC (CV 2)", "SVC (CV 3)", "RFC baseline (ECV)", "AutoML sytem (ECV)"])
 
     if not os.path.exists(output_path + "/trajectory_plots"):
         os.makedirs(output_path + "/trajectory_plots")
@@ -147,3 +149,25 @@ inc_hp_gb.style.hide(axis="index").format(precision=3).to_latex(output_path + "/
 
 inc_hp_svm.rename(columns={"imputation_strategy": "Imputer","sampling_strategy": "Sampler", "scaling_strategy": "Scaler", "kernel": "Kernel", "shrinking": "Shrinking", "tol": "Tolerance", "class_weight": "Class weight"}, inplace=True)
 inc_hp_svm.style.hide(axis="index").format(subset=["C"], precision=3).format(subset=["Tolerance"], precision=4).to_latex(output_path + "/incumbents_tables/incumbents_svm.txt")
+
+# Store table with information about datasets.
+
+dataset_info = pd.DataFrame(columns=["Dataset ID", "Observations", "Features", "Share of underrepresented class", "Total missing values"])
+
+for id in data_ids:
+    data = Dataset.from_openml(id)
+    X = data.features.to_numpy()
+    y = data.labels.to_numpy()
+
+    dataset_dict = {
+        "Dataset ID": id,
+        "Observations": X.shape[0],
+        "Features": X.shape[1],
+        "Share of underrepresented class": np.min(np.unique(y, return_counts=True)[1]/len(y)),
+        "Total missing values": np.sum(np.isnan(X))
+    }
+    dataset_info = pd.concat([dataset_info, pd.DataFrame([dataset_dict])], ignore_index=True)
+
+
+dataset_info.style.hide(axis="index").format(precision=3).to_latex(output_path + "/dataset_info.txt")
+

@@ -389,12 +389,12 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
         for model_number in range(3):
             self.model[model_number][1].steps.pop(1)
 
-        # Save trajectories, runtimes and voting classifier. DEHB objects can be saved optionally.
+        # Save trajectories and runtimes. DEHB and voting classifier objects can be saved optionally.
         if save_optim_output:
             # pickle.dump(self.dehb_objects, open(results_path + "/dehb_objects.pkl", 'wb'))
             pickle.dump(self.trajectories, open(results_path + "/trajectories.pkl", 'wb'))
             pickle.dump(self.runtimes, open(results_path + "/runtimes.pkl", 'wb'))
-            pickle.dump(self.voting_classifier, open(results_path + "/voting_classifier.pkl", 'wb'))
+            # pickle.dump(self.voting_classifier, open(results_path + "/voting_classifier.pkl", 'wb'))
 
         return self
     
@@ -410,13 +410,22 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
             features_dtypes (_type_, optional): Datatypes of all features. Defaults to None.
         """
         
-        # add max budget to dictionary
+        # Add the maximum budget to the hyperparameter dict for the pipeline of each model
+        for model_name in hp_dict.keys():
+            if model_name in ["rf", "gb"]:
+                hp_dict[model_name]["n_estimators"] = int(self.max_budget[model_name])
+            elif model_name in ["svm"]:
+                hp_dict[model_name]["max_iter"] = int(self.max_budget[model_name])
 
+        # Initialize function that rounds imputed or oversampled integer features
         self.column_transformer = self.make_column_transformer(X, features_dtypes)
 
+        # Create list of pipeline for each model
         self.model = []
         for model_name, model in self.model_dict.items():
             self.model.append((model_name, self.make_pipeline(hp_dict[model_name], model, model_name)))
+        
+        # Initialize and fit voting classifier for given hyperparameter
         self.voting_classifier = ensemble.VotingClassifier(self.model)
         self.voting_classifier.fit(X, y)
 
