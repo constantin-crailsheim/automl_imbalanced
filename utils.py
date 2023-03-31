@@ -27,10 +27,12 @@ def delete_large_file(output_path: str):
     Args:
         output_path (str): Output path where results of the run are stored.
     """
+    # Collect all folders from output path, which contain the results of each CV for each dataset
     folders_in_dir = np.array(os.listdir(output_path))
     dataset_folders = np.array(["dataset" in folder_in_dir for folder_in_dir in folders_in_dir])
     dataset_folders = folders_in_dir[dataset_folders]
 
+    # Delete the log files and history from each folder, since they are large and not needed for further analysis.
     for dataset_folder in dataset_folders:
         files_in_folder = np.array(os.listdir(output_path + "/" + dataset_folder))
         log_files = np.array(["dehb" in file_in_folder for file_in_folder in files_in_folder])

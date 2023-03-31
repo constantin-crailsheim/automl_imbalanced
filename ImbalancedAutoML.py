@@ -82,7 +82,7 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
 
         cs = ConfigurationSpace(seed)
 
-        # Set the choices for pre-processing  as categorical hyparparameter
+        # Set the choices for pre-processing as categorical hyparparameter
         sampling_strategy = Categorical(
             "sampling_strategy", items=["SMOTE", "Tomek", "SMOTETomek", "None"]
         )
@@ -110,7 +110,7 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
                 'min_samples_leaf', (1, 16), default=1, log=True
             )
             max_features = Float(
-                'max_features', (0.1, 0.9), default=0.5, log=False # Check whether makes sense
+                'max_features', (0.1, 0.9), default=0.5, log=False
             )
             class_weight = Categorical(
                 "class_weight", items=["balanced", "balanced_subsample", "None"], default="None"
@@ -209,8 +209,7 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
 
         cost = time.time() - start
 
-        # print("Model {} optimized with budget {} at cost {}".format(kwargs["model_name"], int(budget), cost))
-        
+        # Save results in this dictionary format such that DEHB can handle it.
         result = {
             "fitness": -score, 
             "cost": cost,
@@ -265,7 +264,7 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
             if config_dict["class_weight"] == "None":
                 config_dict["class_weight"] = None
         
-        # Creates pipeline for current hyperparameter configuration.
+        # Initializes pipeline for current hyperparameter configuration.
         pipeline = Pipeline(
                 steps=[
                     ("imputer", imputation_strategy),
@@ -303,6 +302,7 @@ class ImbalancedAutoML(ClassifierMixin, BaseEnsemble):
             save_optim_output (bool, optional): Whether the output of DEHB should be saved. Defaults to True.
             output_path (str, optional): The path to store the results. Defaults to "results".
             output_name (Union[str, None], optional): Name of output, should be set to id of dataset. Defaults to None.
+            cv_fold (int, optional): Current CV fold to store results correctly.
             seed (int, optional): Seed to use for the optimization. Defaults to 42.
         """
 
