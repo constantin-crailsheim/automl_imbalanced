@@ -37,8 +37,8 @@ The used packages are the following:
 - `pandas`: Mostly used to generate dataframes to convert to Latex tables.
 - `numpy`: Used for basic data operations and storage and is base for sklearn functions.
 - `scikit-learn`: Elements of pipeline like preprocessing and models are taken from here.
-- `imbalanced-learn`: Imbalanced sampling methods that can be easily combines with sklearn.
-- `dehb`: Optimization framework to tune hyperparameter of pipeline.
+- `imbalanced-learn`: Imbalanced sampling methods that can be easily combined with sklearn.
+- `dehb`: Optimization framework to tune hyperparameters of pipeline.
 - `ConfigSpace`: Used to define and sample from search space. 
 
 # Replication of results
