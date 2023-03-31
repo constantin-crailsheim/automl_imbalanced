@@ -5,15 +5,17 @@ This project was part of the AutoML course in the winter term 2022/23 at LMU Mun
 # File and folder structure
 
 The repo contains the following files and folder:
-- `ImbalancedAutoML.py`: Contains ImbalancedAutoML class, which is the AutoML system used.
-- `configuration.py`: Contains the measure and openml ids
-- `benchmark.py`: File to run benchmarks of AutoML system vs. random forest baseline.
-- `data.py`: A dataclass for downloading and storing OpenML tasks
-- `utils.py`: Contains McNemar test and method to delete large files from results.
-- `visualisation.py`: Notebook to generate tables and plots used for report.
-- `requirements.txt`: Contains all package requirements needed.
-- `results`: Folder where results, plots and tables are stored.
 - `report`: Folder with report files.
+- `results`: Folder where results, plots and tables are stored. Contains results of run used for report. 
+- `ImbalancedAutoML.py`: Contains ImbalancedAutoML class, which is the AutoML system used.
+- `README.md`: Contains instructions about the repo.
+- `benchmark.py`: Contains code to run benchmarks of AutoML system vs. random forest baseline.
+- `configuration.py`: Contains configurations needed in other files.
+- `data.py`: A dataclass for downloading and storing OpenML tasks.
+- `project_automl_imbalanced.pdf`: Contains instructions about project.
+- `requirements.txt`: Contains all package requirements needed.
+- `utils.py`: Contains McNemar test and method to delete large files from results.
+- `visualisation.py`: Contains code to generate tables and plots used for report.
  
 # Setup 
 
